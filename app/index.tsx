@@ -1,19 +1,28 @@
-import { RootView } from "@/components/core";
-import { ThemedButton } from "@/components/themed/themed-button";
-import { ThemedTextInput } from "@/components/themed/themed-text-input";
+import { RootView, ThemedTextInput, ThemedButton } from "@/components";
+import { useRouter } from "expo-router";
 
 export default function Index() {
+  const router = useRouter();
+
+  function login() {
+    router.replace("/(tabs)");
+  }
+
   return (
     <RootView>
       <ThemedTextInput
         label="Student number"
-        textInputProps={{ placeholder: "806501" }}
+        textInputProps={{ placeholder: "777777" }}
       />
       <ThemedTextInput
         label="Name"
-        textInputProps={{ placeholder: "Dalton Su" }}
+        textInputProps={{ placeholder: "John Doe" }}
       />
-      <ThemedButton text="Start scouting" style={{ marginTop: 12 }} />
+      <ThemedButton
+        text="Start scouting"
+        style={{ marginTop: 12 }}
+        onPress={login}
+      />
     </RootView>
   );
 }

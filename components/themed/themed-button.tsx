@@ -12,7 +12,7 @@ export type ThemedButtonProps = TouchableOpacityProps & {
 
 export function ThemedButton({
   style,
-  colorName = "blue",
+  colorName = "highlight",
   text,
   textProps,
   ...rest
