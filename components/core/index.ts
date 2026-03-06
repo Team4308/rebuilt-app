@@ -1,2 +1,1 @@
-export { RootView } from "./root-view"
-
+export { RootView } from "./root-view";

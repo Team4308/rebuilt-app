@@ -6,15 +6,18 @@ export function RootView({ style, ...rest }: ViewProps) {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <SafeAreaView
-        style={[{
-          backgroundColor: Colors.background,
-          flex: 1,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "flex-start",
-          paddingHorizontal: 28,
-          gap: 12
-        }, style]}
+        style={[
+          {
+            backgroundColor: Colors.background,
+            flex: 1,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "flex-start",
+            paddingHorizontal: 28,
+            gap: 12,
+          },
+          style,
+        ]}
         {...rest}
       />
     </TouchableWithoutFeedback>

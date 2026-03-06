@@ -13,10 +13,7 @@ export default function Index() {
         label="Name"
         textInputProps={{ placeholder: "Dalton Su" }}
       />
-      <ThemedButton
-        text="Start scouting"
-        style={{ marginTop: 12 }}
-      />
+      <ThemedButton text="Start scouting" style={{ marginTop: 12 }} />
     </RootView>
   );
 }

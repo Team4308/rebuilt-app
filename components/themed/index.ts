@@ -1,2 +1,2 @@
-export { ThemedView } from "./themed-view"
-export { ThemedText } from "./themed-text"
+export { ThemedView } from "./themed-view";
+export { ThemedText } from "./themed-text";

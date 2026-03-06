@@ -1,5 +1,5 @@
-import { StyleSheet, Text, type TextProps } from 'react-native';
-import { Colors, ThemeColors } from '@/constants/theme';
+import { StyleSheet, Text, type TextProps } from "react-native";
+import { Colors, ThemeColors } from "@/constants/theme";
 
 export type ThemedTextProps = TextProps & {
   colorName?: ThemeColors;
@@ -9,10 +9,10 @@ export type ThemedTextProps = TextProps & {
 export function ThemedText({
   style,
   colorName,
-  type = 'default',
+  type = "default",
   ...rest
 }: ThemedTextProps) {
-  if (!colorName) colorName = type == "small" ? "textFaint" : "text";
+  if (!colorName) colorName = type === "small" ? "textFaint" : "text";
   return (
     <Text
       style={[
@@ -37,15 +37,15 @@ const styles = StyleSheet.create({
   defaultSemiBold: {
     fontSize: 16,
     lineHeight: 24,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   title: {
     fontSize: 32,
     lineHeight: 32,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   subtitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-  }
+    fontWeight: "bold",
+  },
 });
