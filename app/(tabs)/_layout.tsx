@@ -2,15 +2,47 @@ import { Colors } from "@/constants/theme";
 import { Tabs } from "expo-router";
 import {
   CalendarBlankIcon,
+  GarageIcon,
   GearIcon,
-  QuestionIcon,
+  Icon,
 } from "phosphor-react-native";
 import React from "react";
+import { Text } from "react-native";
+
+const iconSize = 24;
+const labelFontSize = 12;
+
+function tabIcon(I: Icon) {
+  const TabIcon = ({ focused, color }: { focused: boolean; color: string }) => (
+    <I size={iconSize} color={color} weight={focused ? "fill" : "regular"} />
+  );
+  return TabIcon;
+}
+
+function tabLabel(title: string) {
+  const TabLabel = ({ color }: { color: string }) => (
+    <Text
+      style={{
+        color,
+        fontSize: labelFontSize,
+      }}
+    >
+      {title}
+    </Text>
+  );
+  return TabLabel;
+}
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
+        tabBarStyle: {
+          borderTopWidth: 0.5,
+          borderColor: Colors.border,
+          backgroundColor: Colors.backgroundDark,
+          paddingHorizontal: 20,
+        },
         tabBarActiveTintColor: Colors.highlight,
         tabBarInactiveTintColor: Colors.tabIconInactive,
         headerShown: false,
@@ -19,40 +51,22 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Matches",
-          tabBarIcon: ({ focused, color, size }) => (
-            <CalendarBlankIcon
-              size={size}
-              color={color}
-              weight={focused ? "fill" : "regular"}
-            />
-          ),
+          tabBarIcon: tabIcon(CalendarBlankIcon),
+          tabBarLabel: tabLabel("Matches"),
         }}
       />
       <Tabs.Screen
-        name="unassigned"
+        name="pits"
         options={{
-          title: "Unassigned",
-          tabBarIcon: ({ focused, color, size }) => (
-            <QuestionIcon
-              size={size}
-              color={color}
-              weight={focused ? "fill" : "regular"}
-            />
-          ),
+          tabBarIcon: tabIcon(GarageIcon),
+          tabBarLabel: tabLabel("Pits"),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Settings",
-          tabBarIcon: ({ focused, color, size }) => (
-            <GearIcon
-              size={size}
-              color={color}
-              weight={focused ? "fill" : "regular"}
-            />
-          ),
+          tabBarIcon: tabIcon(GearIcon),
+          tabBarLabel: tabLabel("Settings"),
         }}
       />
     </Tabs>

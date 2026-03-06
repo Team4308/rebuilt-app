@@ -1,14 +1,15 @@
 export const Colors = {
-  background: "#151718",
-  backgroundFaint: "#212526",
+  background: "#191515",
+  backgroundFaint: "#262121",
+  backgroundDark: "#121010",
 
-  border: "#3b4344",
+  border: "#443b3b",
   tint: "#fff",
 
-  tabIconInactive: "#677c83",
+  tabIconInactive: "#836767",
 
-  text: "#ecedee",
-  textFaint: "#989ea4",
+  text: "#eeecec",
+  textFaint: "#a49898",
 
   highlight: "#ea2e2e",
 };

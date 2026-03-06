@@ -2,10 +2,12 @@ import { TextInput, TextInputProps, View } from "react-native";
 import { ThemedView, ThemedViewProps } from "./themed-view";
 import { Colors, ThemeColors } from "@/constants/theme";
 import { ThemedText } from "./themed-text";
+import { useState } from "react";
 
 export type ThemedTextInputProps = ThemedViewProps & {
   colorName?: ThemeColors;
-  borderCol?: ThemeColors;
+  borderFocusCol?: ThemeColors;
+  borderBlurCol?: ThemeColors;
   label?: string;
   labelCol?: ThemeColors;
   textCol?: ThemeColors;
@@ -16,7 +18,8 @@ export type ThemedTextInputProps = ThemedViewProps & {
 export function ThemedTextInput({
   style,
   colorName = "backgroundFaint",
-  borderCol = "border",
+  borderFocusCol = "highlight",
+  borderBlurCol = "border",
   label,
   labelCol,
   textCol = "text",
@@ -24,6 +27,7 @@ export function ThemedTextInput({
   textInputProps,
   ...rest
 }: ThemedTextInputProps) {
+  const [isFocused, setIsFocused] = useState(false);
   return (
     <View style={{ gap: 4, width: "100%" }}>
       {label ? <ThemedText colorName={labelCol}>{label}</ThemedText> : <></>}
@@ -36,7 +40,9 @@ export function ThemedTextInput({
             justifyContent: "center",
             borderRadius: 8,
             borderWidth: 2,
-            borderColor: Colors[borderCol],
+            borderColor: isFocused
+              ? Colors[borderFocusCol]
+              : Colors[borderBlurCol],
           },
           style,
         ]}
@@ -54,6 +60,8 @@ export function ThemedTextInput({
             },
             textInputProps?.style,
           ]}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
         ></TextInput>
       </ThemedView>
     </View>

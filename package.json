@@ -3,12 +3,14 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "start": "expo start",
-    "tunnel": "expo start --tunnel",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "lint": "expo lint",
-    "api-typegen": "ts-node ./scripts/generate-api-types.ts"
+    "dev": "expo start",
+    "prod": "expo start --no-dev --minify",
+    "dev-tunnel": "expo start --tunnel",
+    "prod-tunnel": "expo start --no-dev --minify --tunnel",
+    "prebuild": "expo prebuild",
+    "api-typegen": "ts-node ./scripts/generate-api-types.ts",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "dependencies": {
     "expo": "~54.0.33",
@@ -17,6 +19,7 @@
     "expo-image": "~3.0.11",
     "expo-linking": "~8.0.11",
     "expo-router": "~6.0.23",
+    "expo-screen-orientation": "~9.0.8",
     "expo-secure-store": "~15.0.8",
     "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",

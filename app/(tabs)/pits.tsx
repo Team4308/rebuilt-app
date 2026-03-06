@@ -1,19 +1,16 @@
 import { RootView, ThemedButton } from "@/components";
-import { useRotateOnEnter } from "@/hooks/rotate-on-enter";
 import { useRouter } from "expo-router";
-import { OrientationLock } from "expo-screen-orientation";
 import { View } from "react-native";
 
-export default function Matches() {
-  useRotateOnEnter(OrientationLock.PORTRAIT_UP);
+export default function Pits() {
   const router = useRouter();
   return (
     <RootView>
       <View style={{ flex: 1 }} />
       <ThemedButton
-        text="Scout match"
+        text="Scout pits"
         onPress={() => {
-          router.replace("/match/auton");
+          router.replace("/pits-scouting");
         }}
       />
     </RootView>
