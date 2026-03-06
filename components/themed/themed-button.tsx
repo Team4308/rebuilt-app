@@ -23,7 +23,7 @@ export function ThemedButton({
         {
           backgroundColor: Colors[colorName],
           borderRadius: 8,
-          height: 44,
+          height: 40,
           width: "100%",
           alignItems: "center",
           justifyContent: "center",

@@ -20,11 +20,12 @@ export function ThemedTextInput({
     <View style={{ gap: 4, width: "100%" }}>
       {label ? <ThemedText>{label}</ThemedText> : <></>}
       <ThemedView
+        colorName="backgroundFaint"
         borderCol={isFocused ? "highlight" : "border"}
         style={[
           {
             width: "100%",
-            height: 44,
+            height: 40,
             justifyContent: "center",
             borderRadius: 8,
             borderWidth: 2,
