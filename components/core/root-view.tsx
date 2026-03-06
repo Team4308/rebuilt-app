@@ -31,6 +31,7 @@ export function RootView({
         {...rest}
       >
         <ThemedView
+          borderCol="border"
           style={[
             {
               flex: 1,
@@ -40,7 +41,6 @@ export function RootView({
               paddingBottom: 16,
               paddingHorizontal: 28,
               gap: 12,
-              borderColor: Colors.border,
               borderTopWidth: orientation === "portrait" ? 0.5 : 0,
             },
             style,
