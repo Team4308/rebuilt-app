@@ -2,21 +2,24 @@ import { View } from "react-native";
 import { ThemedText } from "./themed-text";
 import { ThemedView } from "./themed-view";
 import { ThemedButton } from "./themed-button";
+import { useState } from "react";
 
 export type ThemedSelectorProps = {
-  options: string[];
-  selected: string;
-  setSelected: (val: string) => void;
-
+  options: string[] | { [key: string]: any };
+  setSelected: (val: any) => void;
+  defaultSlected?: string;
   label?: string;
 };
 
 export function ThemedSelector({
   options,
-  selected,
   setSelected,
+  defaultSlected,
   label,
 }: ThemedSelectorProps) {
+  const optionsIsArray = Array.isArray(options);
+  const keys = optionsIsArray ? options : Object.keys(options);
+  const [selectedKey, setSelectedKey] = useState(defaultSlected ?? keys[0]);
   return (
     <View style={{ gap: 4, width: "100%" }}>
       {label ? <ThemedText>{label}</ThemedText> : <></>}
@@ -33,13 +36,13 @@ export function ThemedSelector({
           gap: 2,
         }}
       >
-        {options.map((val, ind) => {
+        {keys.map((key, ind) => {
           const leftRadius = ind === 0 ? 6 : 0;
           const rightRadius = ind === options.length - 1 ? 6 : 0;
-          const highlighted = val === selected;
+          const highlighted = key === selectedKey;
           return (
             <ThemedButton
-              key={val}
+              key={key}
               colorName={highlighted ? "highlight" : "backgroundFaint"}
               textProps={{
                 colorName: highlighted ? "background" : "text",
@@ -54,8 +57,11 @@ export function ThemedSelector({
                 borderTopRightRadius: rightRadius,
                 borderBottomRightRadius: rightRadius,
               }}
-              text={val}
-              onPress={() => setSelected(val)}
+              text={key}
+              onPress={() => {
+                setSelected(optionsIsArray ? key : options[key]);
+                setSelectedKey(key);
+              }}
             />
           );
         })}
