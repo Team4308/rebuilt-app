@@ -6,6 +6,7 @@ export type ThemedButtonProps = TouchableOpacityProps & {
   lightColor?: string;
   darkColor?: string;
   colorName?: ThemeColors;
+  borderCol?: ThemeColors;
   text?: string;
   textProps?: ThemedTextProps;
 };
@@ -13,6 +14,7 @@ export type ThemedButtonProps = TouchableOpacityProps & {
 export function ThemedButton({
   style,
   colorName = "highlight",
+  borderCol,
   text,
   textProps,
   ...rest
@@ -28,6 +30,7 @@ export function ThemedButton({
           alignItems: "center",
           justifyContent: "center",
         },
+        borderCol ? { borderColor: Colors[borderCol] } : undefined,
         style,
       ]}
       {...rest}
