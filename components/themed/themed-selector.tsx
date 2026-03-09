@@ -43,6 +43,7 @@ export function ThemedSelector<T>({
             <ThemedButton
               key={key}
               colorName={selected ? "highlight" : "backgroundFaint"}
+              pressedCol={selected ? "hightlightDark" : "background"}
               borderCol="border"
               textProps={{
                 colorName: selected ? "background" : "text",
@@ -63,6 +64,7 @@ export function ThemedSelector<T>({
               }}
               text={key}
               onPress={() => {
+                if (selected) return;
                 setSelected(options[key]);
                 setSelectedKey(key);
               }}
