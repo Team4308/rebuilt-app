@@ -36,7 +36,6 @@ export function RootView({
             {
               flex: 1,
               display: "flex",
-              justifyContent: "center",
               alignItems: "stretch",
               paddingBottom: 16,
               paddingHorizontal: 28,

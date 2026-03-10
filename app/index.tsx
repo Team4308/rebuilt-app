@@ -9,7 +9,7 @@ export default function Index() {
   }
 
   return (
-    <RootView>
+    <RootView style={{ justifyContent: "center" }}>
       <ThemedTextInput
         label="Student number"
         textInputProps={{ placeholder: "777777" }}
