@@ -16,6 +16,20 @@ export default function Matches() {
           router.replace("/match/auton");
         }}
       />
+      <ThemedButton
+        colorName="background"
+        pressedCol="background"
+        text="Unnassigned matches"
+        style={{
+          width: 230,
+          height: 30,
+          alignSelf: "center",
+        }}
+        textProps={{ colorName: "highlight" }}
+        onPress={() => {
+          router.push("/match/unassigned");
+        }}
+      />
     </RootView>
   );
 }
