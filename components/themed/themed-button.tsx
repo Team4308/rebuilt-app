@@ -19,7 +19,7 @@ export type ThemedButtonProps = PressableProps & {
 export function ThemedButton({
   style,
   colorName = "highlight",
-  pressedCol = "hightlightDark",
+  pressedCol = "highlightDark",
   borderCol,
   text,
   textProps,

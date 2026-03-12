@@ -2,23 +2,20 @@ import { View } from "react-native";
 import { ThemedText } from "./themed-text";
 import { ThemedView } from "./themed-view";
 import { ThemedButton } from "./themed-button";
-import { useState } from "react";
 
 export type ThemedSelectorProps<T> = {
-  options: { [key: string]: T };
+  options: [T, string?][];
+  selected: T;
   setSelected: (val: T) => void;
-  defaultSlected?: string;
   label?: string;
 };
 
 export function ThemedSelector<T>({
   options,
+  selected,
   setSelected,
-  defaultSlected,
   label,
 }: ThemedSelectorProps<T>) {
-  const keys = Object.keys(options);
-  const [selectedKey, setSelectedKey] = useState(defaultSlected ?? keys[0]);
   return (
     <View style={{ gap: 4, width: "100%" }}>
       {label ? <ThemedText>{label}</ThemedText> : <></>}
@@ -34,20 +31,20 @@ export function ThemedSelector<T>({
           gap: 2,
         }}
       >
-        {keys.map((key, ind) => {
+        {options.map(([val, valLabel], ind) => {
           const leftRadius = ind === 0 ? 8 : 0;
-          const rightRadius = ind === keys.length - 1 ? 8 : 0;
-          const selected = key === selectedKey;
-          const borderSize = selected ? 0 : 2;
+          const rightRadius = ind === options.length - 1 ? 8 : 0;
+          const isSelected = val === selected;
+          const borderSize = isSelected ? 0 : 2;
           return (
             <ThemedButton
-              key={key}
-              colorName={selected ? "highlight" : "backgroundFaint"}
-              pressedCol={selected ? "hightlightDark" : "background"}
+              key={valLabel}
+              colorName={isSelected ? "highlight" : "backgroundFaint"}
+              pressedCol={isSelected ? "highlightDark" : "background"}
               borderCol="border"
               textProps={{
-                colorName: selected ? "background" : "text",
-                type: selected ? "defaultSemiBold" : "default",
+                colorName: isSelected ? "background" : "text",
+                type: isSelected ? "defaultSemiBold" : "default",
               }}
               style={{
                 height: 40,
@@ -60,13 +57,12 @@ export function ThemedSelector<T>({
                 borderTopWidth: borderSize,
                 borderBottomWidth: borderSize,
                 borderLeftWidth: ind === 0 ? borderSize : 0,
-                borderRightWidth: ind === keys.length - 1 ? borderSize : 0,
+                borderRightWidth: ind === options.length - 1 ? borderSize : 0,
               }}
-              text={key}
+              text={valLabel ?? JSON.stringify(val)}
               onPress={() => {
-                if (selected) return;
-                setSelected(options[key]);
-                setSelectedKey(key);
+                if (isSelected) return;
+                setSelected(val);
               }}
             />
           );

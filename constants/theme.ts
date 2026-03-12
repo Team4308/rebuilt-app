@@ -12,7 +12,7 @@ export const Colors = {
   textFaint: "#a49898",
 
   highlight: "#ea2e2e",
-  hightlightDark: "#ad1f1f",
+  highlightDark: "#ad1f1f",
 };
 
 export type ThemeColors = keyof typeof Colors;

@@ -3,7 +3,9 @@ import { useSettingsStore } from "@/hooks/settings-store";
 import { Image } from "expo-image";
 
 export default function Settings() {
+  const trainingMode = useSettingsStore((state) => state.trainingMode);
   const setTrainingMode = useSettingsStore((state) => state.setTrainingMode);
+  const fieldRotation = useSettingsStore((state) => state.fieldRotation);
   const setFieldRotation = useSettingsStore((state) => state.setFieldRotation);
   return (
     <RootView style={{ paddingTop: 16 }}>
@@ -13,19 +15,20 @@ export default function Settings() {
       {/*   source={require("@/assets/images/arena.svg")} */}
       {/* /> */}
       <ThemedSelector
-        options={{
-          "Red | Blue": "rb",
-          "Blue | Red": "br",
-        }}
+        options={[
+          ["rb", "Red | Blue"],
+          ["br", "Blue | Red"],
+        ]}
+        selected={fieldRotation}
         setSelected={setFieldRotation}
       />
       <ThemedSelector
         label="Training Mode"
-        options={{
-          On: true,
-          Off: false,
-        }}
-        defaultSlected="Off"
+        options={[
+          [true, "On"],
+          [false, "Off"],
+        ]}
+        selected={trainingMode}
         setSelected={setTrainingMode}
       />
     </RootView>
