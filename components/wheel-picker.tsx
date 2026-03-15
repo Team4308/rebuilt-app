@@ -1,15 +1,24 @@
-import { Colors } from '@/constants/theme';
-import React, { useRef } from 'react';
+import { Colors } from "@/constants/theme";
+import React, { useRef } from "react";
 import {
   Animated,
   PanResponder,
+  StyleProp,
   StyleSheet,
   View,
-} from 'react-native';
+  ViewStyle,
+} from "react-native";
+import { ThemedView } from "./themed/themed-view";
 
 const ITEM_HEIGHT = 60;
 
-export function WheelPicker<T>({ data, onValueChange, renderLabel }: {
+export function WheelPicker<T>({
+  data,
+  onValueChange,
+  renderLabel,
+  style,
+}: {
+  style?: StyleProp<ViewStyle>;
   data: T[];
   onValueChange: (item: T) => void;
   renderLabel: (item: T) => string;
@@ -22,15 +31,21 @@ export function WheelPicker<T>({ data, onValueChange, renderLabel }: {
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderMove: (_, gestureState) => {
-        scrollY.setValue(lastScrollY.current - gestureState.dy);
+        const newScroll = lastScrollY.current - gestureState.dy;
+        scrollY.setValue(newScroll);
+        const targetIndex = Math.min(
+          Math.max(Math.round(newScroll / ITEM_HEIGHT), 0),
+          data.length - 1,
+        );
+        onValueChange(data[targetIndex]);
       },
       onPanResponderRelease: (_, gestureState) => {
         const totalDrag = lastScrollY.current - gestureState.dy;
         const targetIndex = Math.min(
           Math.max(Math.round(totalDrag / ITEM_HEIGHT), 0),
-          data.length - 1
+          data.length - 1,
         );
-        
+
         lastScrollY.current = targetIndex * ITEM_HEIGHT;
         onValueChange(data[targetIndex]);
 
@@ -38,16 +53,20 @@ export function WheelPicker<T>({ data, onValueChange, renderLabel }: {
           toValue: lastScrollY.current,
           useNativeDriver: true,
           friction: 8,
-          tension: 40,
+          tension: 30,
         }).start();
       },
-    })
+    }),
   ).current;
 
   return (
-    <View style={styles.container} {...panResponder.panHandlers}>
-      <View style={styles.selectionIndicator} />
-      
+    <View style={[styles.container, style]} {...panResponder.panHandlers}>
+      <ThemedView
+        borderCol="border"
+        colorName="backgroundFaint"
+        style={styles.selectionIndicator}
+      />
+
       <View style={styles.listWrapper}>
         {data.map((item, index) => {
           const inputRange = [
@@ -59,13 +78,13 @@ export function WheelPicker<T>({ data, onValueChange, renderLabel }: {
           const opacity = scrollY.interpolate({
             inputRange,
             outputRange: [0.3, 1, 0.3],
-            extrapolate: 'clamp',
+            extrapolate: "clamp",
           });
 
           const scale = scrollY.interpolate({
             inputRange,
             outputRange: [0.8, 1.1, 0.8],
-            extrapolate: 'clamp',
+            extrapolate: "clamp",
           });
 
           return (
@@ -96,36 +115,35 @@ export function WheelPicker<T>({ data, onValueChange, renderLabel }: {
 
 const styles = StyleSheet.create({
   container: {
-    height: ITEM_HEIGHT * 3,
-    width: '100%',
-    overflow: 'hidden',
+    width: "100%",
+    overflow: "hidden",
   },
   listWrapper: {
+    top: "50%",
     height: ITEM_HEIGHT,
-    width: '100%',
-    top: ITEM_HEIGHT, 
+    transform: [{ translateY: "-50%" }],
+    width: "100%",
   },
   itemWrapper: {
     height: ITEM_HEIGHT,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'absolute',
-    width: '100%',
+    justifyContent: "center",
+    alignItems: "center",
+    position: "absolute",
+    width: "100%",
   },
   itemText: {
-    color: '#FFFFFF',
+    color: Colors.text,
     fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
   },
   selectionIndicator: {
-    position: 'absolute',
-    top: ITEM_HEIGHT,
+    position: "absolute",
+    top: "50%",
     height: ITEM_HEIGHT,
-    width: '100%',
+    transform: [{ translateY: "-50%" }],
+    width: "100%",
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.backgroundFaint,
   },
 });
