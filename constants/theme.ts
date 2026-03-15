@@ -13,6 +13,11 @@ export const Colors = {
 
   highlight: "#ea2e2e",
   highlightDark: "#ad1f1f",
+
+  blue: "#4287f5",
+  blueFill: "#4287f550",
+  red: "#f54242",
+  redFill: "#f5424250",
 };
 
 export type ThemeColors = keyof typeof Colors;

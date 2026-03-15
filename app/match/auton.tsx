@@ -1,39 +1,48 @@
-import { RootView, ThemedButton } from "@/components";
+import {
+  ArenaSVG,
+  RootView,
+  ThemedButton,
+  ThemedText,
+  ThemedView,
+} from "@/components";
+import { arenaH, arenaW } from "@/components/themed/arena-svg";
 import { useRotateOnEnter } from "@/hooks/rotate-on-enter";
+import { useSettingsStore } from "@/hooks/settings-store";
 import { useRouter } from "expo-router";
 import { OrientationLock } from "expo-screen-orientation";
-import { useRef, useState } from 'react';
-import { StyleSheet, Text, View } from "react-native";
+import { useRef, useState } from "react";
+import { StyleSheet, View } from "react-native";
 
-const Colors = {
-  background: "#191515",
-  backgroundFaint: "#262121",
-  border: "#443b3b",
-  text: "#eeecec",
-  highlight: "#ea2e2e",
-  highlightDark: "#ad1f1f",
-};
-
-export default function PreciseAuto() {
+export default function Auton() {
   useRotateOnEnter(OrientationLock.LANDSCAPE);
   const router = useRouter();
 
   const [isTracking, setIsTracking] = useState(false);
   const [timer, setTimer] = useState(17);
-  const [position, setPosition] = useState({ x: 50, y: 50 });
-  const pathData = useRef([]);
-  const fieldRef = useRef<View>(null);
-  const [fieldLayout, setFieldLayout] = useState({ x: 0, y: 0 });
+  const startTime = useRef(0);
 
-  const BOX_SIZE = 60;
+  const [position, setPosition] = useState({ posX: 210, posY: 0 });
+  const pathData = useRef<{ posX: number; posY: number; time: number }[]>([]);
+
+  const fieldRef = useRef<View>(null);
+  const [fieldLayout, setFieldLayout] = useState({
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+  });
+
+  const BOX_SIZE = (fieldLayout.height / 330) * 35;
+
+  const fieldRotation = useSettingsStore((state) => state.fieldRotation);
+  const rot = fieldRotation === "br" ? -1 : 1;
 
   const startTracking = () => {
     setIsTracking(true);
     const dataInterval = setInterval(() => {
       pathData.current.push({
-        x: position.x.toFixed(1),
-        y: position.y.toFixed(1),
-        t: Date.now()
+        ...position,
+        time: Date.now() - startTime.current,
       });
     }, 100);
 
@@ -56,118 +65,123 @@ export default function PreciseAuto() {
 
   return (
     <RootView style={styles.container} orientation="landscape">
-      <View 
+      <View style={[styles.buttonRow, { width: fieldLayout.width }]}>
+        {isTracking ? (
+          <ThemedView borderCol="highlight" style={styles.timerOverlay}>
+            <ThemedView colorName="highlight" style={styles.recordingDot} />
+            <ThemedText type="defaultSemiBold">{timer}s</ThemedText>
+          </ThemedView>
+        ) : (
+          <>
+            <ThemedButton
+              style={styles.navButton}
+              text="Back"
+              onPress={() => router.replace("/(tabs)")}
+            />
+            <View style={{ flex: 1 }} />
+            <ThemedButton
+              style={styles.navButton}
+              text="Start"
+              onPress={startTracking}
+            />
+          </>
+        )}
+      </View>
+
+      <ThemedView
         ref={fieldRef}
         onLayout={() => {
-          fieldRef.current?.measure((x, y, width, height, pageX, pageY) => {
-            setFieldLayout({ x: pageX, y: pageY });
+          fieldRef.current?.measure((_x, _y, width, height, pageX, pageY) => {
+            setFieldLayout({ x: pageX, y: pageY, width, height });
           });
         }}
         style={styles.field}
         onStartShouldSetResponder={() => true}
         onResponderMove={(e) => {
           const { pageX, pageY } = e.nativeEvent;
-          const relativeX = pageX - fieldLayout.x - BOX_SIZE / 2;
-          const relativeY = pageY - fieldLayout.y - BOX_SIZE / 2;
+          const relativeX =
+            ((pageX - fieldLayout.x) / fieldLayout.width) * 2 - 1;
+          const relativeY =
+            ((pageY - fieldLayout.y) / fieldLayout.height) * 2 - 1;
 
-          const x = Math.max(0, Math.min(relativeX, 600 - BOX_SIZE));
-          const y = Math.max(0, Math.min(relativeY, 300 - BOX_SIZE));
-          
-          setPosition({ x, y });
+          const posX =
+            Math.max(-308, Math.min((relativeX * arenaW) / 2, 308)) * rot;
+          const posY =
+            Math.max(-141, Math.min((relativeY * arenaH) / 2, 141)) * rot;
+
+          setPosition({ posX, posY });
         }}
       >
-        <View 
-          style={{ 
-            left: position.x, 
-            top: position.y, 
-            width: BOX_SIZE, 
+        <ArenaSVG
+          style={{
+            position: "absolute",
+            width: "100%",
+            height: "100%",
+            transform: fieldRotation === "br" ? [{ rotate: "180deg" }] : [],
+          }}
+        />
+        <ThemedView
+          colorName="highlight"
+          borderCol="text"
+          style={{
+            left:
+              ((((position.posX * rot) / arenaW) * 2 + 1) * fieldLayout.width) /
+                2 -
+              BOX_SIZE / 2,
+            top:
+              ((((position.posY * rot) / arenaH) * 2 + 1) *
+                fieldLayout.height) /
+                2 -
+              BOX_SIZE / 2,
+            width: BOX_SIZE,
             height: BOX_SIZE,
-            position: 'absolute',
-            backgroundColor: Colors.highlight,
-            zIndex: 10,
-            borderRadius: 12,
+            position: "absolute",
+            borderRadius: 8,
             borderWidth: 2,
-            borderColor: Colors.text
           }}
           pointerEvents="none"
         />
-
-        {isTracking && (
-          <View style={styles.timerOverlay}>
-            <View style={styles.recordingDot} />
-            <Text style={styles.timerText}>{timer}s</Text>
-          </View>
-        )}
-      </View>
-
-      {!isTracking && (
-        <View style={styles.buttonRow}>
-          <ThemedButton
-            style={styles.navButton}
-            text="Back"
-            onPress={() => router.replace("/(tabs)")}
-          />
-          <View style={{ width: 20 }} />
-          <ThemedButton
-            style={styles.navButton}
-            text="Start"
-            onPress={startTracking}
-          />
-        </View>
-      )}
+      </ThemedView>
     </RootView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.background
+    paddingTop: 16,
+    alignItems: "center",
+    justifyContent: "center",
   },
   field: {
-    width: 600,
-    height: 300,
-    backgroundColor: Colors.backgroundFaint,
-    borderWidth: 2,
-    borderColor: Colors.border,
-    borderRadius: 8,
-    position: 'relative',
-    overflow: 'hidden'
+    width: "100%",
+    flex: 1,
+    aspectRatio: arenaW / arenaH,
+    position: "relative",
+    overflow: "hidden",
   },
   timerOverlay: {
-    position: 'absolute', 
-    top: 12, 
-    right: 12, 
-    backgroundColor: 'rgba(0,0,0,0.7)', 
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12, 
-    paddingVertical: 6, 
-    borderRadius: 6,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: Colors.highlight
+    height: 30,
+    width: 60,
   },
   recordingDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.highlight,
-    marginRight: 8
-  },
-  timerText: {
-    color: Colors.text, 
-    fontWeight: 'bold', 
-    fontFamily: 'monospace',
-    fontSize: 14
+    marginRight: 4,
   },
   buttonRow: {
-    flexDirection: 'row',
-    marginTop: 20,
+    height: 30,
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
   },
   navButton: {
-    width: 140,
-    height: 44,
-  }
+    width: 70,
+    height: 30,
+  },
 });
