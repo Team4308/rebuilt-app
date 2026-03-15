@@ -1,8 +1,10 @@
 import { View, type ViewProps } from "react-native";
 
 import { Colors, ThemeColors } from "@/constants/theme";
+import { RefObject } from "react";
 
 export type ThemedViewProps = ViewProps & {
+  ref?: RefObject<View | null>;
   colorName?: ThemeColors;
   borderCol?: ThemeColors;
 };
