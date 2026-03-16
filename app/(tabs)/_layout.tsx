@@ -49,7 +49,7 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="matches"
         options={{
           tabBarIcon: tabIcon(CalendarBlankIcon),
           tabBarLabel: tabLabel("Matches"),

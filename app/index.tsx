@@ -5,7 +5,7 @@ export default function Index() {
   const router = useRouter();
 
   function login() {
-    router.replace("/(tabs)");
+    router.replace("/(tabs)/matches");
   }
 
   return (

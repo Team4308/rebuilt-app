@@ -1,3 +1,4 @@
+import { AutonRoute } from "@/api";
 import {
   ArenaSVG,
   RootView,
@@ -6,6 +7,7 @@ import {
   ThemedView,
 } from "@/components";
 import { arenaH, arenaW } from "@/components/themed/arena-svg";
+import { useMatchStore } from "@/hooks/match-store";
 import { useRotateOnEnter } from "@/hooks/rotate-on-enter";
 import { useSettingsStore } from "@/hooks/settings-store";
 import { useRouter } from "expo-router";
@@ -17,12 +19,19 @@ export default function Auton() {
   useRotateOnEnter(OrientationLock.LANDSCAPE);
   const router = useRouter();
 
+  const state = useMatchStore.getState();
+  const match = state.current;
+  const alliance = match?.alliance;
+
   const [isTracking, setIsTracking] = useState(false);
   const [timer, setTimer] = useState(17);
   const startTime = useRef(0);
 
-  const [position, setPosition] = useState({ posX: 210, posY: 0 });
-  const pathData = useRef<{ posX: number; posY: number; time: number }[]>([]);
+  const [position, setPosition] = useState({
+    posX: alliance === "blue" ? 210 : -210,
+    posY: 0,
+  });
+  const routeData = useRef<AutonRoute>([]);
 
   const fieldRef = useRef<View>(null);
   const [fieldLayout, setFieldLayout] = useState({
@@ -34,13 +43,19 @@ export default function Auton() {
 
   const BOX_SIZE = (fieldLayout.height / 330) * 35;
 
-  const fieldRotation = useSettingsStore((state) => state.fieldRotation);
+  const fieldRotation = useSettingsStore.getState().fieldRotation;
   const rot = fieldRotation === "br" ? -1 : 1;
 
   const startTracking = () => {
     setIsTracking(true);
+    state.updateData((curr) => {
+      curr.auton.startX = position.posX;
+      curr.auton.startY = position.posY;
+    });
+
     const dataInterval = setInterval(() => {
-      pathData.current.push({
+      routeData.current.push({
+        action: "move",
         ...position,
         time: Date.now() - startTime.current,
       });
@@ -59,6 +74,9 @@ export default function Auton() {
     setTimeout(() => {
       clearInterval(dataInterval);
       clearInterval(countdownInterval);
+      state.updateData((curr) => {
+        curr.auton.route = routeData.current;
+      });
       router.replace("/match/post-match");
     }, 17000);
   };
@@ -76,7 +94,7 @@ export default function Auton() {
             <ThemedButton
               style={styles.navButton}
               text="Back"
-              onPress={() => router.replace("/(tabs)")}
+              onPress={() => router.replace("/(tabs)/matches")}
             />
             <View style={{ flex: 1 }} />
             <ThemedButton
@@ -121,7 +139,7 @@ export default function Auton() {
           }}
         />
         <ThemedView
-          colorName="highlight"
+          colorName={alliance}
           borderCol="text"
           style={{
             left:

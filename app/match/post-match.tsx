@@ -12,7 +12,7 @@ export default function PostMatch() {
         <ThemedButton
           text="Submit match data"
           onPress={() => {
-            router.replace("/(tabs)");
+            router.replace("/(tabs)/matches");
           }}
         />
       </DefaultScrollView>

@@ -3,6 +3,7 @@ import React, { useRef } from "react";
 import {
   Animated,
   PanResponder,
+  PanResponderGestureState,
   StyleProp,
   StyleSheet,
   View,
@@ -12,50 +13,70 @@ import { ThemedView } from "./themed/themed-view";
 
 const ITEM_HEIGHT = 60;
 
-export function WheelPicker<T>({
-  data,
-  onValueChange,
-  renderLabel,
+export function WheelPicker({
   style,
+  labels,
+  index,
+  setIndex,
 }: {
   style?: StyleProp<ViewStyle>;
-  data: T[];
-  onValueChange: (item: T) => void;
-  renderLabel: (item: T) => string;
+  labels: [string, string?][];
+  index: number | null;
+  setIndex: (index: number | null) => void;
 }) {
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const lastScrollY = useRef(0);
+  const initialScroll = index ? index * ITEM_HEIGHT : 0;
+  const scrollY = useRef(new Animated.Value(initialScroll)).current;
+  const lastScrollY = useRef(initialScroll);
+
+  const handlers = useRef<{
+    onMove: (gestureState: PanResponderGestureState) => void;
+    onRelease: (gestureState: PanResponderGestureState) => void;
+  }>({ onMove: (_) => {}, onRelease: (_) => {} });
+  handlers.current = {
+    onMove: (gestureState) => {
+      const newScroll = lastScrollY.current - gestureState.dy;
+      scrollY.setValue(newScroll);
+      if (labels.length === 0) {
+        if (index !== null) setIndex(null);
+        return;
+      }
+      const targetIndex = Math.min(
+        Math.max(Math.round(newScroll / ITEM_HEIGHT), 0),
+        labels.length - 1,
+      );
+      setIndex(targetIndex);
+    },
+    onRelease: (gestureState) => {
+      const totalDrag = lastScrollY.current - gestureState.dy;
+      if (labels.length === 0) {
+        if (index !== null) setIndex(null);
+        lastScrollY.current = 0;
+      } else {
+        const targetIndex = Math.min(
+          Math.max(Math.round(totalDrag / ITEM_HEIGHT), 0),
+          labels.length - 1,
+        );
+        lastScrollY.current = targetIndex * ITEM_HEIGHT;
+        setIndex(targetIndex);
+      }
+
+      Animated.spring(scrollY, {
+        toValue: lastScrollY.current,
+        useNativeDriver: true,
+        friction: 8,
+        tension: 30,
+      }).start();
+    },
+  };
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
-      onPanResponderMove: (_, gestureState) => {
-        const newScroll = lastScrollY.current - gestureState.dy;
-        scrollY.setValue(newScroll);
-        const targetIndex = Math.min(
-          Math.max(Math.round(newScroll / ITEM_HEIGHT), 0),
-          data.length - 1,
-        );
-        onValueChange(data[targetIndex]);
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        const totalDrag = lastScrollY.current - gestureState.dy;
-        const targetIndex = Math.min(
-          Math.max(Math.round(totalDrag / ITEM_HEIGHT), 0),
-          data.length - 1,
-        );
-
-        lastScrollY.current = targetIndex * ITEM_HEIGHT;
-        onValueChange(data[targetIndex]);
-
-        Animated.spring(scrollY, {
-          toValue: lastScrollY.current,
-          useNativeDriver: true,
-          friction: 8,
-          tension: 30,
-        }).start();
-      },
+      onPanResponderMove: (_, gestureState) =>
+        handlers.current.onMove(gestureState),
+      onPanResponderRelease: (_, gestureState) =>
+        handlers.current.onRelease(gestureState),
     }),
   ).current;
 
@@ -68,7 +89,7 @@ export function WheelPicker<T>({
       />
 
       <View style={styles.listWrapper}>
-        {data.map((item, index) => {
+        {labels.map((label, index) => {
           const inputRange = [
             (index - 1) * ITEM_HEIGHT,
             index * ITEM_HEIGHT,
@@ -102,8 +123,13 @@ export function WheelPicker<T>({
                 },
               ]}
             >
-              <Animated.Text style={styles.itemText}>
-                {renderLabel(item)}
+              <Animated.Text
+                style={[
+                  styles.itemText,
+                  label[1] ? { color: label[1] } : undefined,
+                ]}
+              >
+                {label[0]}
               </Animated.Text>
             </Animated.View>
           );

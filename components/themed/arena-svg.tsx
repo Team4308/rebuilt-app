@@ -6,7 +6,7 @@ type ArenaSVGProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-export const arenaW = 664;
+export const arenaW = 660;
 export const arenaH = 330;
 
 const sw = 2,

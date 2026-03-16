@@ -18,6 +18,8 @@ export const Colors = {
   blueFill: "#4287f550",
   red: "#f54242",
   redFill: "#f5424250",
+
+  green: "#42f55a",
 };
 
 export type ThemeColors = keyof typeof Colors;

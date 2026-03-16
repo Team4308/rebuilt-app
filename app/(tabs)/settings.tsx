@@ -1,26 +1,37 @@
-import { RootView, ThemedSelector, ThemedText } from "@/components";
+import {
+  ArenaSVG,
+  RootView,
+  ThemedButton,
+  ThemedSelector,
+  ThemedText,
+} from "@/components";
+import { arenaH, arenaW } from "@/components/themed/arena-svg";
 import { useSettingsStore } from "@/hooks/settings-store";
-import { Image } from "expo-image";
+import { useRouter } from "expo-router";
 
 export default function Settings() {
   const trainingMode = useSettingsStore((state) => state.trainingMode);
-  const setTrainingMode = useSettingsStore((state) => state.setTrainingMode);
   const fieldRotation = useSettingsStore((state) => state.fieldRotation);
-  const setFieldRotation = useSettingsStore((state) => state.setFieldRotation);
+  const actions = useSettingsStore.getState();
+
+  const router = useRouter();
   return (
     <RootView style={{ paddingTop: 16 }}>
       <ThemedText type="subtitle">Field Rotation</ThemedText>
-      {/* <Image */}
-      {/*   style={{ width: "100%", aspectRatio: 2, transform: fieldRotation === "blue-red" ? [{ rotate: "180deg" }] : [] }} */}
-      {/*   source={require("@/assets/images/arena.svg")} */}
-      {/* /> */}
+      <ArenaSVG
+        style={{
+          width: "100%",
+          aspectRatio: arenaW / arenaH,
+          transform: fieldRotation === "br" ? [{ rotate: "180deg" }] : [],
+        }}
+      />
       <ThemedSelector
         options={[
           ["rb", "Red | Blue"],
           ["br", "Blue | Red"],
         ]}
         selected={fieldRotation}
-        setSelected={setFieldRotation}
+        setSelected={actions.setFieldRotation}
       />
       <ThemedSelector
         label="Training Mode"
@@ -29,7 +40,13 @@ export default function Settings() {
           [false, "Off"],
         ]}
         selected={trainingMode}
-        setSelected={setTrainingMode}
+        setSelected={actions.setTrainingMode}
+      />
+
+      <ThemedButton
+        style={{ marginTop: 80 }}
+        text="Logout"
+        onPress={() => router.replace({ pathname: "/" })}
       />
     </RootView>
   );

@@ -1,49 +1,11 @@
-import { ScoutingSchedule } from "@/api/models/ScoutingSchedule";
+import { MatchSchedule } from "@/api";
 import { RootView, ThemedButton, ThemedText, ThemedView } from "@/components";
 import { WheelPicker } from "@/components/wheel-picker";
+import { Colors } from "@/constants/theme";
+import { useMatchStore } from "@/hooks/match-store";
 import { useRotateOnEnter } from "@/hooks/rotate-on-enter";
 import { useRouter } from "expo-router";
 import { OrientationLock } from "expo-screen-orientation";
-import { useState } from "react";
-
-const mockData: ScoutingSchedule = [
-  {
-    matchID: "Qualifier 15",
-    teamNumber: 4038,
-    alliance: "red",
-    times: { startTime: Date.now() + 300_000 },
-  },
-  {
-    matchID: "Qualifier 16",
-    teamNumber: 4083,
-    alliance: "blue",
-    times: { startTime: Date.now() + 600_000 },
-  },
-  {
-    matchID: "Qualifier 17",
-    teamNumber: 4308,
-    alliance: "blue",
-    times: { startTime: Date.now() + 900_000 },
-  },
-  {
-    matchID: "Qualifier 18",
-    teamNumber: 4380,
-    alliance: "red",
-    times: { startTime: Date.now() + 1_200_000 },
-  },
-  {
-    matchID: "Qualifier 19",
-    teamNumber: 4803,
-    alliance: "blue",
-    times: { startTime: Date.now() + 1_500_000 },
-  },
-  {
-    matchID: "Qualifier 20",
-    teamNumber: 4830,
-    alliance: "red",
-    times: { startTime: Date.now() + 1_800_000 },
-  },
-];
 
 function msToWords(time: number): string {
   const mins = Math.abs(time) / 1000 / 60;
@@ -51,7 +13,7 @@ function msToWords(time: number): string {
   return `${Math.round(mins)} minutes`;
 }
 
-function getTimeInfo(item: ScoutingSchedule[number] | null): string | null {
+function getTimeInfo(item: MatchSchedule | null): string | null {
   if (!item || !item.times) return null;
 
   const { queueTime, onDeckTime, onFieldTime, startTime } = item.times;
@@ -82,15 +44,20 @@ export default function Matches() {
   useRotateOnEnter(OrientationLock.PORTRAIT_UP);
   const router = useRouter();
 
-  const [selectedMatch, setSelectedMatch] = useState<
-    ScoutingSchedule[number] | null
-  >(null);
-
+  const selectedMatch = useMatchStore<MatchSchedule | null>((state) =>
+    state.selected !== null ? state.schedule[state.selected] : null,
+  );
   const desc = getTimeInfo(selectedMatch);
   const allianceInfo = selectedMatch
     ? `${selectedMatch.alliance[0].toUpperCase()}${selectedMatch.alliance.substring(1)} alliance`
     : null;
 
+  const state = useMatchStore.getState();
+
+  const schedule = useMatchStore((state) => state.schedule);
+  const selected = useMatchStore((state) => state.selected);
+
+  const now = Date.now();
   return (
     <RootView>
       <ThemedText
@@ -106,9 +73,16 @@ export default function Matches() {
 
       <WheelPicker
         style={{ flex: 1 }}
-        data={mockData}
-        onValueChange={(item) => setSelectedMatch(item)}
-        renderLabel={(item) => `${item.matchID} - ${item.teamNumber}`}
+        labels={schedule.map((match) => [
+          `${match.matchID} - ${match.teamNumber}`,
+          (match.times?.startTime ?? 0) > now
+            ? Colors.text
+            : match.matchID in state.storedData
+              ? Colors.green
+              : Colors.red,
+        ])}
+        index={selected}
+        setIndex={state.setSelected}
       />
 
       <ThemedView
@@ -124,14 +98,17 @@ export default function Matches() {
         }}
       >
         <ThemedText type="defaultSemiBold">{desc ?? "No time data"}</ThemedText>
-        <ThemedText type="defaultSemiBold">
+        <ThemedText type="defaultSemiBold" colorName={selectedMatch?.alliance}>
           {allianceInfo ?? "No match selected"}
         </ThemedText>
       </ThemedView>
 
       <ThemedButton
+        colorName={selectedMatch ? "highlight" : "highlightDark"}
         text="Scout match"
         onPress={() => {
+          if (!selectedMatch) return;
+          state.newData();
           router.replace("/match/auton");
         }}
       />

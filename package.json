@@ -8,7 +8,7 @@
     "dev-tunnel": "expo start --tunnel",
     "prod-tunnel": "expo start --no-dev --minify --tunnel",
     "prebuild": "expo prebuild",
-    "api-typegen": "ts-node ./scripts/generate-api-types.ts",
+    "api-typegen": "npx openapi-ts -i https://rebuilt-workers.the-woodlands-robotics.workers.dev/openapi.json -o ./api",
     "android": "expo run:android",
     "ios": "expo run:ios"
   },
@@ -24,6 +24,7 @@
     "expo-secure-store": "~15.0.8",
     "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
+    "immer": "^11.1.4",
     "phosphor-react-native": "^3.0.3",
     "react": "19.1.0",
     "react-dom": "19.1.0",
@@ -34,14 +35,13 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "@hey-api/openapi-ts": "0.94.1",
     "@types/react": "~19.1.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.3.2",
-    "openapi-typescript-codegen": "^0.30.0",
     "prettier": "^3.8.1",
-    "ts-node": "^10.9.2",
     "typescript": "~5.9.2"
   },
   "private": true,
