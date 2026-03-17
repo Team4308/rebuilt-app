@@ -1,5 +1,6 @@
-import { StyleSheet, Text, type TextProps } from "react-native";
+import { StyleSheet, Text, TextProps } from "react-native";
 import { Colors, ThemeColors } from "@/constants/theme";
+import { createAnimatedComponent } from "react-native-reanimated";
 
 export type ThemedTextProps = TextProps & {
   colorName?: ThemeColors;
@@ -15,15 +16,13 @@ export function ThemedText({
   if (!colorName) colorName = type === "small" ? "textFaint" : "text";
   return (
     <Text
-      style={[
-        { color: Colors[colorName] },
-        type ? styles[type] : undefined,
-        style,
-      ]}
+      style={[{ color: Colors[colorName] }, styles[type], style]}
       {...rest}
     />
   );
 }
+
+export const AnimatedThemedText = createAnimatedComponent(ThemedText);
 
 const styles = StyleSheet.create({
   small: {
@@ -34,7 +33,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
   },
-  defaultSemiBold: {
+  semiBold: {
     fontSize: 16,
     lineHeight: 24,
     fontWeight: "600",

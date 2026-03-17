@@ -1,5 +1,6 @@
 import { RootView, ThemedTextInput, ThemedButton } from "@/components";
 import { useRouter } from "expo-router";
+import { View } from "react-native";
 
 export default function Index() {
   const router = useRouter();
@@ -23,6 +24,7 @@ export default function Index() {
         style={{ marginTop: 12 }}
         onPress={login}
       />
+      <View style={{ height: 120 }} />
     </RootView>
   );
 }

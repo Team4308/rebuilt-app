@@ -46,8 +46,6 @@ export function ThemedSelector<T>({
                 type: isSelected ? "defaultSemiBold" : "default",
               }}
               style={{
-                height: 40,
-                width: "auto",
                 flex: 1,
                 borderTopLeftRadius: leftRadius,
                 borderBottomLeftRadius: leftRadius,

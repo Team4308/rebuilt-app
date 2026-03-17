@@ -8,7 +8,7 @@ import {
 } from "@/components";
 import { arenaH, arenaW } from "@/components/themed/arena-svg";
 import { ThemedButtonProps } from "@/components/themed/themed-button";
-import { Colors } from "@/constants/theme";
+import { AnimatedThemedView } from "@/components/themed/themed-view";
 import { useMatchStore } from "@/hooks/match-store";
 import { useRotateOnEnter } from "@/hooks/rotate-on-enter";
 import { useSettingsStore } from "@/hooks/settings-store";
@@ -17,10 +17,7 @@ import { OrientationLock } from "expo-screen-orientation";
 import { useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-} from "react-native-reanimated";
+import { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 
 export default function Auton() {
   useRotateOnEnter(OrientationLock.LANDSCAPE);
@@ -56,16 +53,19 @@ export default function Auton() {
   const rot = fieldRotation === "br" ? -1 : 1;
   const controls = settings.controls;
 
-  const updatePos = (event: { x: number; y: number }) => {
-    const relativeX = (event.x / fieldLayout.width) * 2 - 1;
-    const relativeY = (event.y / fieldLayout.height) * 2 - 1;
+  const updatePos = ({ x, y }: { x: number; y: number }) => {
+    const relativeX = (x / fieldLayout.width) * 2 - 1;
+    const relativeY = (y / fieldLayout.height) * 2 - 1;
 
     const posX = Math.max(-308, Math.min((relativeX * arenaW) / 2, 308)) * rot;
     const posY = Math.max(-141, Math.min((relativeY * arenaH) / 2, 141)) * rot;
 
     pos.value = { posX, posY };
   };
-  const panGesture = Gesture.Pan().onBegin(updatePos).onUpdate(updatePos);
+  const panGesture = Gesture.Pan()
+    .activateAfterLongPress(0)
+    .onUpdate(updatePos)
+    .simultaneousWithExternalGesture();
 
   const startTracking = () => {
     setIsTracking(true);
@@ -75,10 +75,8 @@ export default function Auton() {
       curr.auton.startX = pos.value.posX;
       curr.auton.startY = pos.value.posY;
     });
-    console.log(pos.value);
 
     const dataInterval = setInterval(() => {
-      console.log(pos.value);
       routeData.current.push({
         action: "move",
         ...pos.value,
@@ -110,7 +108,10 @@ export default function Auton() {
     active: isTracking,
     style: { height: 60 },
     colorName: alliance,
-    textProps: { type: "subtitle" },
+    textProps: {
+      type: "subtitle",
+      style: { textAlign: "center", lineHeight: 22 },
+    },
   };
 
   const robotPos = useAnimatedStyle(() => ({
@@ -128,7 +129,7 @@ export default function Auton() {
         {isTracking ? (
           <ThemedView borderCol="highlight" style={styles.timerOverlay}>
             <ThemedView colorName="highlight" style={styles.recordingDot} />
-            <ThemedText type="defaultSemiBold">{timer}s</ThemedText>
+            <ThemedText type="semiBold">{timer}s</ThemedText>
           </ThemedView>
         ) : (
           <>
@@ -170,14 +171,13 @@ export default function Auton() {
             borderCol="text"
             style={{
               borderRadius: 8,
-              borderWidth: 2,
               height: 40,
               marginBottom: 20,
               justifyContent: "center",
               alignItems: "center",
             }}
           >
-            <ThemedText type="defaultSemiBold">{match?.team}</ThemedText>
+            <ThemedText type="semiBold">{match?.team}</ThemedText>
           </ThemedView>
           <ThemedButton
             text={shooting ? "Stop shoot" : "Shoot"}
@@ -234,16 +234,15 @@ export default function Auton() {
                 transform: fieldRotation === "br" ? [{ rotate: "180deg" }] : [],
               }}
             />
-            <Animated.View
+            <AnimatedThemedView
+              colorName={alliance}
+              borderCol="text"
               style={[
                 {
-                  backgroundColor: Colors[alliance ?? "highlight"],
-                  borderColor: Colors.text,
                   width: BOX_SIZE,
                   height: BOX_SIZE,
                   position: "absolute",
                   borderRadius: 8,
-                  borderWidth: 2,
                 },
                 robotPos,
               ]}

@@ -1,10 +1,8 @@
-import { View, type ViewProps } from "react-native";
-
+import { View, ViewProps } from "react-native";
 import { Colors, ThemeColors } from "@/constants/theme";
-import { RefObject } from "react";
+import { createAnimatedComponent } from "react-native-reanimated";
 
 export type ThemedViewProps = ViewProps & {
-  ref?: RefObject<View | null>;
   colorName?: ThemeColors;
   borderCol?: ThemeColors;
 };
@@ -18,11 +16,16 @@ export function ThemedView({
   return (
     <View
       style={[
-        { backgroundColor: Colors[colorName] },
-        borderCol ? { borderColor: Colors[borderCol] } : undefined,
+        {
+          backgroundColor: Colors[colorName],
+          borderColor: borderCol ? Colors[borderCol] : undefined,
+          borderWidth: borderCol ? 2 : 0,
+        },
         style,
       ]}
       {...rest}
     />
   );
 }
+
+export const AnimatedThemedView = createAnimatedComponent(ThemedView);

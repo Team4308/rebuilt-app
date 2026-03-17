@@ -34,7 +34,6 @@ export function ThemedTextInput({
             height: 40,
             justifyContent: "center",
             borderRadius: 8,
-            borderWidth: 2,
           },
           style,
         ]}

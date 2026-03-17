@@ -1,10 +1,11 @@
 import { Colors } from "@/constants/theme";
-import { Keyboard, Pressable, StyleSheet } from "react-native";
+import { Keyboard, StyleSheet } from "react-native";
 import {
   SafeAreaView,
   SafeAreaViewProps,
 } from "react-native-safe-area-context";
 import { ThemedView } from "../themed/themed-view";
+import { Pressable } from "react-native-gesture-handler";
 
 export type RootViewProps = SafeAreaViewProps & {
   hasTextInput?: boolean;

@@ -88,7 +88,6 @@ export default function Matches() {
         borderCol="border"
         colorName="backgroundFaint"
         style={{
-          borderWidth: 2,
           borderRadius: 8,
           justifyContent: "center",
           alignItems: "center",
@@ -96,8 +95,8 @@ export default function Matches() {
           paddingVertical: 12,
         }}
       >
-        <ThemedText type="defaultSemiBold">{desc ?? "No time data"}</ThemedText>
-        <ThemedText type="defaultSemiBold" colorName={selectedMatch?.alliance}>
+        <ThemedText type="semiBold">{desc ?? "No time data"}</ThemedText>
+        <ThemedText type="semiBold" colorName={selectedMatch?.alliance}>
           {allianceInfo ?? "No match selected"}
         </ThemedText>
       </ThemedView>

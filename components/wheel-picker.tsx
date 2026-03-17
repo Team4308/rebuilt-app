@@ -1,4 +1,4 @@
-import { Colors, ThemeColors } from "@/constants/theme";
+import { ThemeColors } from "@/constants/theme";
 import React, { useRef, useState } from "react";
 import { FlatListProps, StyleSheet, View } from "react-native";
 import { ThemedView } from "./themed/themed-view";
@@ -10,6 +10,7 @@ import Animated, {
   useDerivedValue,
   useSharedValue,
 } from "react-native-reanimated";
+import { AnimatedThemedText } from "./themed/themed-text";
 
 const ReanimatedFlatList = createAnimatedComponent(FlatList);
 const AnimatedFlatList = ReanimatedFlatList as unknown as new <
@@ -41,24 +42,17 @@ function AnimatedItem({
   );
 
   return (
-    <Animated.View
-      style={[
-        styles.listItem,
-        {
-          transform: [{ scale }],
-        },
-      ]}
-    >
-      <Animated.Text
+    <Animated.View style={[styles.listItem, { transform: [{ scale }] }]}>
+      <AnimatedThemedText
+        colorName={color}
         style={{
-          color: Colors[color],
           fontSize: 18,
           fontWeight: "600",
           opacity,
         }}
       >
         {label}
-      </Animated.Text>
+      </AnimatedThemedText>
     </Animated.View>
   );
 }
@@ -152,7 +146,7 @@ const styles = StyleSheet.create({
     height: ITEM_HEIGHT,
     transform: [{ translateY: "-50%" }],
     width: "100%",
-    borderTopWidth: 2,
-    borderBottomWidth: 2,
+    borderLeftWidth: 0,
+    borderRightWidth: 0,
   },
 });
