@@ -12,6 +12,7 @@ import { useRouter } from "expo-router";
 export default function Settings() {
   const trainingMode = useSettingsStore((state) => state.trainingMode);
   const fieldRotation = useSettingsStore((state) => state.fieldRotation);
+  const controls = useSettingsStore((state) => state.controls);
   const actions = useSettingsStore.getState();
 
   const router = useRouter();
@@ -32,6 +33,15 @@ export default function Settings() {
         ]}
         selected={fieldRotation}
         setSelected={actions.setFieldRotation}
+      />
+      <ThemedSelector
+        label="Buttons side"
+        options={[
+          ["left", "Left"],
+          ["right", "Right"],
+        ]}
+        selected={controls}
+        setSelected={actions.setControls}
       />
       <ThemedSelector
         label="Training Mode"

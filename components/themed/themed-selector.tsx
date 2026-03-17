@@ -40,7 +40,6 @@ export function ThemedSelector<T>({
             <ThemedButton
               key={valLabel}
               colorName={isSelected ? "highlight" : "backgroundFaint"}
-              pressedCol={isSelected ? "highlightDark" : "background"}
               borderCol="border"
               textProps={{
                 colorName: isSelected ? "background" : "text",

@@ -74,10 +74,10 @@ export default function Matches() {
         keyExtractor={(match) => match.matchID}
         renderLabel={(match) => `${match.matchID} - ${match.teamNumber}`}
         renderColor={(match) =>
-          (match.times?.startTime ?? 0) > now
-            ? "text"
-            : match.matchID in state.storedData
-              ? "green"
+          match.matchID in state.storedData
+            ? "green"
+            : (match.times?.startTime ?? 0) > now
+              ? "text"
               : "red"
         }
         selected={state.selected}
@@ -103,7 +103,7 @@ export default function Matches() {
       </ThemedView>
 
       <ThemedButton
-        colorName={selectedMatch ? "highlight" : "highlightDark"}
+        active={selectedMatch !== null}
         text="Scout match"
         onPress={() => {
           if (!selectedMatch) return;
@@ -114,7 +114,7 @@ export default function Matches() {
 
       <ThemedButton
         colorName="background"
-        pressedCol="background"
+        pressChangesCol={false}
         text="Unnassigned matches"
         style={{
           width: 230,

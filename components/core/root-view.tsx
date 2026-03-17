@@ -7,10 +7,12 @@ import {
 import { ThemedView } from "../themed/themed-view";
 
 export type RootViewProps = SafeAreaViewProps & {
+  hasTextInput?: boolean;
   orientation?: "landscape" | "portrait";
 };
 
 export function RootView({
+  hasTextInput = false,
   orientation = "portrait",
   style,
   children,
@@ -42,11 +44,15 @@ export function RootView({
           style,
         ]}
       >
-        <Pressable
-          style={StyleSheet.absoluteFill}
-          onPress={Keyboard.dismiss}
-          accessible={false}
-        ></Pressable>
+        {hasTextInput ? (
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={Keyboard.dismiss}
+            accessible={false}
+          ></Pressable>
+        ) : (
+          <></>
+        )}
         {children}
       </ThemedView>
     </SafeAreaView>

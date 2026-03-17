@@ -3,6 +3,7 @@ import { ThemedView, ThemedViewProps } from "./themed-view";
 import { Colors } from "@/constants/theme";
 import { ThemedText } from "./themed-text";
 import { useState } from "react";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
 export type ThemedTextInputProps = ThemedViewProps & {
   label?: string;
@@ -16,6 +17,11 @@ export function ThemedTextInput({
   ...rest
 }: ThemedTextInputProps) {
   const [isFocused, setIsFocused] = useState(false);
+
+  const input = Gesture.Tap();
+  const drag = Gesture.Pan();
+  const composed = Gesture.Exclusive(input, drag);
+
   return (
     <View style={{ gap: 4, width: "100%" }}>
       {label ? <ThemedText>{label}</ThemedText> : <></>}
@@ -34,21 +40,23 @@ export function ThemedTextInput({
         ]}
         {...rest}
       >
-        <TextInput
-          placeholderTextColor={Colors.textFaint}
-          {...textInputProps}
-          style={[
-            {
-              height: "100%",
-              fontSize: 16,
-              color: Colors.text,
-              paddingHorizontal: 12,
-            },
-            textInputProps?.style,
-          ]}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-        ></TextInput>
+        <GestureDetector gesture={composed}>
+          <TextInput
+            placeholderTextColor={Colors.textFaint}
+            {...textInputProps}
+            style={[
+              {
+                height: "100%",
+                fontSize: 16,
+                color: Colors.text,
+                paddingHorizontal: 12,
+              },
+              textInputProps?.style,
+            ]}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+          />
+        </GestureDetector>
       </ThemedView>
     </View>
   );

@@ -1,28 +1,29 @@
 import { Colors, ThemeColors } from "@/constants/theme";
+import { ThemedText, ThemedTextProps } from "./themed-text";
 import {
   Pressable,
   PressableProps,
   PressableStateCallbackType,
-} from "react-native";
-import { ThemedText, ThemedTextProps } from "./themed-text";
+} from "react-native-gesture-handler";
 
 export type ThemedButtonProps = PressableProps & {
-  lightColor?: string;
-  darkColor?: string;
   colorName?: ThemeColors;
-  pressedCol?: ThemeColors;
   borderCol?: ThemeColors;
   text?: string;
   textProps?: ThemedTextProps;
+  active?: boolean;
+  pressChangesCol?: boolean;
 };
 
 export function ThemedButton({
   style,
   colorName = "highlight",
-  pressedCol = "highlightDark",
   borderCol,
   text,
   textProps,
+  active = true,
+  pressChangesCol = true,
+  onPress,
   ...rest
 }: ThemedButtonProps) {
   return (
@@ -30,9 +31,8 @@ export function ThemedButton({
       style={(state: PressableStateCallbackType) => {
         return [
           {
-            backgroundColor: state.pressed
-              ? Colors[pressedCol]
-              : Colors[colorName],
+            backgroundColor: Colors[colorName],
+            opacity: (!active || state.pressed) && pressChangesCol ? 0.7 : 1,
             borderRadius: 8,
             height: 40,
             width: "100%",
@@ -43,6 +43,7 @@ export function ThemedButton({
           typeof style === "function" ? style(state) : style,
         ];
       }}
+      onPress={active ? onPress : undefined}
       {...rest}
     >
       <ThemedText colorName="background" type="defaultSemiBold" {...textProps}>

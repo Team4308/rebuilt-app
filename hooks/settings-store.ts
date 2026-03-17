@@ -7,6 +7,8 @@ type SettingsStore = {
   setTrainingMode: (val: boolean) => void;
   fieldRotation: "rb" | "br";
   setFieldRotation: (val: SettingsStore["fieldRotation"]) => void;
+  controls: "left" | "right";
+  setControls: (val: SettingsStore["controls"]) => void;
 };
 
 export const useSettingsStore = create<SettingsStore>()(
@@ -16,6 +18,8 @@ export const useSettingsStore = create<SettingsStore>()(
       setTrainingMode: (val) => set({ trainingMode: val }),
       fieldRotation: "rb",
       setFieldRotation: (val) => set({ fieldRotation: val }),
+      controls: "left",
+      setControls: (val) => set({ controls: val }),
     }),
     { name: "settings-store", storage: createJSONStorage(() => AsyncStorage) },
   ),

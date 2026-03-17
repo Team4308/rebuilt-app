@@ -1,4 +1,5 @@
-import { ScrollView, ScrollViewProps } from "react-native";
+import { ScrollViewProps } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 
 export function DefaultScrollView({ style, ...rest }: ScrollViewProps) {
   return (

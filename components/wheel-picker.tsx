@@ -1,7 +1,20 @@
 import { Colors, ThemeColors } from "@/constants/theme";
-import React, { useEffect, useRef, useState } from "react";
-import { Animated, StyleSheet, View } from "react-native";
+import React, { useRef, useState } from "react";
+import { FlatListProps, StyleSheet, View } from "react-native";
 import { ThemedView } from "./themed/themed-view";
+import { FlatList } from "react-native-gesture-handler";
+import Animated, {
+  createAnimatedComponent,
+  interpolate,
+  SharedValue,
+  useDerivedValue,
+  useSharedValue,
+} from "react-native-reanimated";
+
+const ReanimatedFlatList = createAnimatedComponent(FlatList);
+const AnimatedFlatList = ReanimatedFlatList as unknown as new <
+  T,
+>() => React.Component<FlatListProps<T>>;
 
 const ITEM_HEIGHT = 60;
 
@@ -14,23 +27,18 @@ function AnimatedItem({
   label: string;
   color: ThemeColors;
   index: number;
-  scrollY: Animated.Value;
+  scrollY: SharedValue<number>;
 }) {
   const pos = index * ITEM_HEIGHT;
   const range = (ITEM_HEIGHT * 3) / 2;
   const inputRange = [pos - range, pos, pos + range];
 
-  const scale = scrollY.interpolate({
-    inputRange,
-    outputRange: [0.8, 1.1, 0.8],
-    extrapolate: "clamp",
-  });
-
-  const opacity = scrollY.interpolate({
-    inputRange,
-    outputRange: [0.5, 1, 0.5],
-    extrapolate: "clamp",
-  });
+  const scale = useDerivedValue(() =>
+    interpolate(scrollY.value, inputRange, [0.8, 1.1, 0.8], "clamp"),
+  );
+  const opacity = useDerivedValue(() =>
+    interpolate(scrollY.value, inputRange, [0.5, 1, 0.5], "clamp"),
+  );
 
   return (
     <Animated.View
@@ -46,7 +54,7 @@ function AnimatedItem({
           color: Colors[color],
           fontSize: 18,
           fontWeight: "600",
-          opacity: opacity,
+          opacity,
         }}
       >
         {label}
@@ -63,7 +71,7 @@ export function WheelPicker<T>({
   selected,
   setSelected,
 }: {
-  data: Animated.WithAnimatedObject<ArrayLike<T>>;
+  data: T[];
   keyExtractor: (item: T) => string;
   renderLabel: (item: T) => string;
   renderColor?: (item: T) => ThemeColors;
@@ -72,16 +80,10 @@ export function WheelPicker<T>({
 }) {
   const [containerHeight, setContainerHeight] = useState(0);
 
-  const scrollY = useRef(
-    new Animated.Value(selected === null ? 0 : selected * ITEM_HEIGHT),
-  ).current;
-  useEffect(() => {
-    const listenerId = scrollY.addListener(({ value }) => {
-      const index = Math.round(value / ITEM_HEIGHT);
-      if (index !== selected) setSelected(index);
-    });
-    return () => scrollY.removeListener(listenerId);
-  }, []);
+  const scrollY = useSharedValue(
+    selected === null ? 0 : selected * ITEM_HEIGHT,
+  );
+  const selectedRef = useRef(selected);
 
   return (
     <View
@@ -95,7 +97,7 @@ export function WheelPicker<T>({
         pointerEvents="none"
       />
       {containerHeight > 0 && (
-        <Animated.FlatList
+        <AnimatedFlatList
           style={{ flex: 1 }}
           data={data}
           renderItem={({ item, index }) => (
@@ -114,10 +116,14 @@ export function WheelPicker<T>({
           contentContainerStyle={{
             paddingVertical: Math.max(0, (containerHeight - ITEM_HEIGHT) / 2),
           }}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: true },
-          )}
+          onScroll={(event) => {
+            scrollY.value = event.nativeEvent.contentOffset.y;
+            const index = Math.round(scrollY.value / ITEM_HEIGHT);
+            if (index !== selectedRef.current) {
+              selectedRef.current = index;
+              setSelected(index);
+            }
+          }}
           getItemLayout={(_, index) => ({
             length: ITEM_HEIGHT,
             offset: ITEM_HEIGHT * index,
