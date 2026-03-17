@@ -1,140 +1,131 @@
-import { Colors } from "@/constants/theme";
-import React, { useRef } from "react";
-import {
-  Animated,
-  PanResponder,
-  PanResponderGestureState,
-  StyleProp,
-  StyleSheet,
-  View,
-  ViewStyle,
-} from "react-native";
+import { Colors, ThemeColors } from "@/constants/theme";
+import React, { useEffect, useRef, useState } from "react";
+import { Animated, StyleSheet, View } from "react-native";
 import { ThemedView } from "./themed/themed-view";
 
 const ITEM_HEIGHT = 60;
 
-export function WheelPicker({
-  style,
-  labels,
+function AnimatedItem({
+  label,
+  color,
   index,
-  setIndex,
+  scrollY,
 }: {
-  style?: StyleProp<ViewStyle>;
-  labels: [string, string?][];
-  index: number | null;
-  setIndex: (index: number | null) => void;
+  label: string;
+  color: ThemeColors;
+  index: number;
+  scrollY: Animated.Value;
 }) {
-  const initialScroll = index ? index * ITEM_HEIGHT : 0;
-  const scrollY = useRef(new Animated.Value(initialScroll)).current;
-  const lastScrollY = useRef(initialScroll);
+  const pos = index * ITEM_HEIGHT;
+  const range = (ITEM_HEIGHT * 3) / 2;
+  const inputRange = [pos - range, pos, pos + range];
 
-  const handlers = useRef<{
-    onMove: (gestureState: PanResponderGestureState) => void;
-    onRelease: (gestureState: PanResponderGestureState) => void;
-  }>({ onMove: (_) => {}, onRelease: (_) => {} });
-  handlers.current = {
-    onMove: (gestureState) => {
-      const newScroll = lastScrollY.current - gestureState.dy;
-      scrollY.setValue(newScroll);
-      if (labels.length === 0) {
-        if (index !== null) setIndex(null);
-        return;
-      }
-      const targetIndex = Math.min(
-        Math.max(Math.round(newScroll / ITEM_HEIGHT), 0),
-        labels.length - 1,
-      );
-      setIndex(targetIndex);
-    },
-    onRelease: (gestureState) => {
-      const totalDrag = lastScrollY.current - gestureState.dy;
-      if (labels.length === 0) {
-        if (index !== null) setIndex(null);
-        lastScrollY.current = 0;
-      } else {
-        const targetIndex = Math.min(
-          Math.max(Math.round(totalDrag / ITEM_HEIGHT), 0),
-          labels.length - 1,
-        );
-        lastScrollY.current = targetIndex * ITEM_HEIGHT;
-        setIndex(targetIndex);
-      }
+  const scale = scrollY.interpolate({
+    inputRange,
+    outputRange: [0.8, 1.1, 0.8],
+    extrapolate: "clamp",
+  });
 
-      Animated.spring(scrollY, {
-        toValue: lastScrollY.current,
-        useNativeDriver: true,
-        friction: 8,
-        tension: 30,
-      }).start();
-    },
-  };
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderMove: (_, gestureState) =>
-        handlers.current.onMove(gestureState),
-      onPanResponderRelease: (_, gestureState) =>
-        handlers.current.onRelease(gestureState),
-    }),
-  ).current;
+  const opacity = scrollY.interpolate({
+    inputRange,
+    outputRange: [0.5, 1, 0.5],
+    extrapolate: "clamp",
+  });
 
   return (
-    <View style={[styles.container, style]} {...panResponder.panHandlers}>
+    <Animated.View
+      style={[
+        styles.listItem,
+        {
+          transform: [{ scale }],
+        },
+      ]}
+    >
+      <Animated.Text
+        style={{
+          color: Colors[color],
+          fontSize: 18,
+          fontWeight: "600",
+          opacity: opacity,
+        }}
+      >
+        {label}
+      </Animated.Text>
+    </Animated.View>
+  );
+}
+
+export function WheelPicker<T>({
+  data,
+  keyExtractor,
+  renderLabel,
+  renderColor = (_) => "text",
+  selected,
+  setSelected,
+}: {
+  data: Animated.WithAnimatedObject<ArrayLike<T>>;
+  keyExtractor: (item: T) => string;
+  renderLabel: (item: T) => string;
+  renderColor?: (item: T) => ThemeColors;
+  selected: number | null;
+  setSelected: (index: number | null) => void;
+}) {
+  const [containerHeight, setContainerHeight] = useState(0);
+
+  const scrollY = useRef(
+    new Animated.Value(selected === null ? 0 : selected * ITEM_HEIGHT),
+  ).current;
+  useEffect(() => {
+    const listenerId = scrollY.addListener(({ value }) => {
+      const index = Math.round(value / ITEM_HEIGHT);
+      if (index !== selected) setSelected(index);
+    });
+    return () => scrollY.removeListener(listenerId);
+  }, []);
+
+  return (
+    <View
+      style={styles.container}
+      onLayout={(event) => setContainerHeight(event.nativeEvent.layout.height)}
+    >
       <ThemedView
         borderCol="border"
         colorName="backgroundFaint"
         style={styles.selectionIndicator}
+        pointerEvents="none"
       />
-
-      <View style={styles.listWrapper}>
-        {labels.map((label, index) => {
-          const inputRange = [
-            (index - 1) * ITEM_HEIGHT,
-            index * ITEM_HEIGHT,
-            (index + 1) * ITEM_HEIGHT,
-          ];
-
-          const opacity = scrollY.interpolate({
-            inputRange,
-            outputRange: [0.3, 1, 0.3],
-            extrapolate: "clamp",
-          });
-
-          const scale = scrollY.interpolate({
-            inputRange,
-            outputRange: [0.8, 1.1, 0.8],
-            extrapolate: "clamp",
-          });
-
-          return (
-            <Animated.View
-              key={index}
-              style={[
-                styles.itemWrapper,
-                {
-                  top: index * ITEM_HEIGHT,
-                  opacity,
-                  transform: [
-                    { translateY: Animated.multiply(scrollY, -1) },
-                    { scale },
-                  ],
-                },
-              ]}
-            >
-              <Animated.Text
-                style={[
-                  styles.itemText,
-                  label[1] ? { color: label[1] } : undefined,
-                ]}
-              >
-                {label[0]}
-              </Animated.Text>
-            </Animated.View>
-          );
-        })}
-      </View>
+      {containerHeight > 0 && (
+        <Animated.FlatList
+          style={{ flex: 1 }}
+          data={data}
+          renderItem={({ item, index }) => (
+            <AnimatedItem
+              label={renderLabel(item)}
+              color={renderColor(item)}
+              index={index}
+              scrollY={scrollY}
+            />
+          )}
+          keyExtractor={keyExtractor}
+          showsVerticalScrollIndicator={false}
+          snapToInterval={ITEM_HEIGHT}
+          snapToAlignment="start"
+          decelerationRate={0}
+          contentContainerStyle={{
+            paddingVertical: Math.max(0, (containerHeight - ITEM_HEIGHT) / 2),
+          }}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: true },
+          )}
+          getItemLayout={(_, index) => ({
+            length: ITEM_HEIGHT,
+            offset: ITEM_HEIGHT * index,
+            index,
+          })}
+          initialScrollIndex={selected}
+        />
+      )}
     </View>
   );
 }
@@ -142,26 +133,12 @@ export function WheelPicker({
 const styles = StyleSheet.create({
   container: {
     width: "100%",
-    overflow: "hidden",
+    flex: 1,
   },
-  listWrapper: {
-    top: "50%",
+  listItem: {
     height: ITEM_HEIGHT,
-    transform: [{ translateY: "-50%" }],
-    width: "100%",
-  },
-  itemWrapper: {
-    height: ITEM_HEIGHT,
-    justifyContent: "center",
     alignItems: "center",
-    position: "absolute",
-    width: "100%",
-  },
-  itemText: {
-    color: Colors.text,
-    fontSize: 18,
-    fontWeight: "600",
-    textAlign: "center",
+    justifyContent: "center",
   },
   selectionIndicator: {
     position: "absolute",
@@ -169,7 +146,7 @@ const styles = StyleSheet.create({
     height: ITEM_HEIGHT,
     transform: [{ translateY: "-50%" }],
     width: "100%",
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
+    borderTopWidth: 2,
+    borderBottomWidth: 2,
   },
 });

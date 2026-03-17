@@ -1,7 +1,6 @@
 import { MatchSchedule } from "@/api";
 import { RootView, ThemedButton, ThemedText, ThemedView } from "@/components";
 import { WheelPicker } from "@/components/wheel-picker";
-import { Colors } from "@/constants/theme";
 import { useMatchStore } from "@/hooks/match-store";
 import { useRotateOnEnter } from "@/hooks/rotate-on-enter";
 import { useRouter } from "expo-router";
@@ -55,7 +54,6 @@ export default function Matches() {
   const state = useMatchStore.getState();
 
   const schedule = useMatchStore((state) => state.schedule);
-  const selected = useMatchStore((state) => state.selected);
 
   const now = Date.now();
   return (
@@ -72,17 +70,18 @@ export default function Matches() {
       </ThemedText>
 
       <WheelPicker
-        style={{ flex: 1 }}
-        labels={schedule.map((match) => [
-          `${match.matchID} - ${match.teamNumber}`,
+        data={schedule}
+        keyExtractor={(match) => match.matchID}
+        renderLabel={(match) => `${match.matchID} - ${match.teamNumber}`}
+        renderColor={(match) =>
           (match.times?.startTime ?? 0) > now
-            ? Colors.text
+            ? "text"
             : match.matchID in state.storedData
-              ? Colors.green
-              : Colors.red,
-        ])}
-        index={selected}
-        setIndex={state.setSelected}
+              ? "green"
+              : "red"
+        }
+        selected={state.selected}
+        setSelected={state.setSelected}
       />
 
       <ThemedView

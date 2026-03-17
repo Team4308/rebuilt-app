@@ -63,7 +63,8 @@ export const useMatchStore = create<MatchStore>()(
       set((state) => {
         state.schedule = sch;
         if (sch.length === 0) state.selected = null;
-        if (state.selected !== null)
+        else if (state.selected === null) state.selected = 0;
+        else if (state.selected !== null)
           state.selected = Math.min(
             sch.length - 1,
             Math.max(0, state.selected),

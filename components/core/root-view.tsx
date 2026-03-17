@@ -1,5 +1,5 @@
 import { Colors } from "@/constants/theme";
-import { Keyboard, TouchableWithoutFeedback } from "react-native";
+import { Keyboard, Pressable, StyleSheet } from "react-native";
 import {
   SafeAreaView,
   SafeAreaViewProps,
@@ -17,37 +17,38 @@ export function RootView({
   ...rest
 }: RootViewProps) {
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <SafeAreaView
-        style={{
-          flex: 1,
-          display: "flex",
-          backgroundColor:
-            Colors[
-              orientation === "portrait" ? "backgroundDark" : "background"
-            ],
-        }}
-        edges={["top", "left", "right"]}
-        {...rest}
+    <SafeAreaView
+      style={{
+        flex: 1,
+        display: "flex",
+        backgroundColor:
+          Colors[orientation === "portrait" ? "backgroundDark" : "background"],
+      }}
+      edges={["top", "left", "right"]}
+      {...rest}
+    >
+      <ThemedView
+        borderCol="border"
+        style={[
+          {
+            flex: 1,
+            display: "flex",
+            alignItems: "stretch",
+            paddingBottom: 16,
+            paddingHorizontal: 28,
+            gap: 12,
+            borderTopWidth: orientation === "portrait" ? 0.5 : 0,
+          },
+          style,
+        ]}
       >
-        <ThemedView
-          borderCol="border"
-          style={[
-            {
-              flex: 1,
-              display: "flex",
-              alignItems: "stretch",
-              paddingBottom: 16,
-              paddingHorizontal: 28,
-              gap: 12,
-              borderTopWidth: orientation === "portrait" ? 0.5 : 0,
-            },
-            style,
-          ]}
-        >
-          {children}
-        </ThemedView>
-      </SafeAreaView>
-    </TouchableWithoutFeedback>
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={Keyboard.dismiss}
+          accessible={false}
+        ></Pressable>
+        {children}
+      </ThemedView>
+    </SafeAreaView>
   );
 }
