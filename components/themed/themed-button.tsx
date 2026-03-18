@@ -1,28 +1,23 @@
 import { scheduleOnRN } from "react-native-worklets";
 import { ThemedText, ThemedTextProps } from "./themed-text";
-import {
-  Gesture,
-  GestureDetector,
-  GestureType,
-} from "react-native-gesture-handler";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import {
   AnimatedProps,
-  useDerivedValue,
   useSharedValue,
+  withSpring,
 } from "react-native-reanimated";
 import { AnimatedThemedView, ThemedViewProps } from "./themed-view";
-import { ReactNode, RefObject } from "react";
+import { ReactNode } from "react";
 
 export type ThemedButtonProps = AnimatedProps<ThemedViewProps> & {
   text?: string;
   textProps?: ThemedTextProps;
   active?: boolean;
   onJS?: boolean;
-  pressChangesCol?: boolean;
-  gestureRef?: RefObject<GestureType | null>;
-  externalGestures?: RefObject<GestureType>[];
   onPress?: () => void;
   children?: ReactNode;
+  pressOpacity?: number;
+  needScroll?: boolean;
 };
 
 export function ThemedButton({
@@ -32,42 +27,65 @@ export function ThemedButton({
   textProps,
   active = true,
   onJS = true,
-  pressChangesCol = true,
-  gestureRef,
-  externalGestures = [],
   children,
   onPress,
+  pressOpacity = 0.7,
+  needScroll = false,
   ...rest
 }: ThemedButtonProps) {
-  const pressed = useSharedValue(false);
+  pressOpacity = Math.min(1, Math.max(0, pressOpacity));
+
   const layout = useSharedValue({ width: 0, height: 0 });
 
-  const pressGesture = Gesture.Pan()
-    .activateAfterLongPress(0)
-    .onUpdate(
-      ({ x, y }) =>
-        (pressed.value =
-          x >= -20 &&
-          y >= -20 &&
-          x <= layout.value.width + 20 &&
-          y < layout.value.height + 20),
-    )
+  const pressed = useSharedValue(false);
+  const opacity = useSharedValue(1);
+
+  const tapGesture = Gesture.Tap()
     .onEnd(() => {
-      if (!pressed.value) return;
+      if (!active) return;
       pressed.value = false;
+      opacity.value = withSpring(1, { stiffness: 2000 });
       if (onPress) {
         if (onJS) scheduleOnRN(onPress);
         else onPress();
       }
     })
-    .simultaneousWithExternalGesture(...externalGestures);
-  if (gestureRef) gestureRef.current = pressGesture;
+    .simultaneousWithExternalGesture();
+  const panGesture = Gesture.Pan()
+    .failOffsetY(needScroll ? [-5, 5] : [-1000, 1000])
+    .onBegin(() => {
+      if (!active) return;
+      pressed.value = true;
+      opacity.value = withSpring(pressOpacity, { stiffness: 2000 });
+    })
+    .onUpdate(({ x, y }) => {
+      if (!active) return;
+      pressed.value =
+        x >= -20 &&
+        y >= -20 &&
+        x <= layout.value.width + 20 &&
+        y < layout.value.height + 20;
+      if (pressed.value)
+        opacity.value = withSpring(pressOpacity, { stiffness: 2000 });
+      else opacity.value = withSpring(1, { stiffness: 2000 });
+    })
+    .onEnd(() => {
+      if (!active || !pressed.value) return;
+      if (onPress) {
+        if (onJS) scheduleOnRN(onPress);
+        else onPress();
+      }
+    })
+    .onTouchesCancelled(() => {
+      pressed.value = false;
+      opacity.value = withSpring(1, { stiffness: 2000 });
+    })
+    .simultaneousWithExternalGesture();
 
-  const opacity = useDerivedValue(() =>
-    (!active || pressed.value) && pressChangesCol ? 0.7 : 1,
-  );
+  const composed = Gesture.Simultaneous(tapGesture, panGesture);
+
   return (
-    <GestureDetector gesture={pressGesture}>
+    <GestureDetector gesture={composed}>
       <AnimatedThemedView
         onLayout={({
           nativeEvent: {
@@ -76,7 +94,7 @@ export function ThemedButton({
         }) => (layout.value = { width, height })}
         colorName={colorName}
         style={[
-          { opacity },
+          active ? { opacity } : { opacity: pressOpacity },
           {
             borderRadius: 8,
             height: 40,
