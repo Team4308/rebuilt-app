@@ -11,7 +11,7 @@ import {
   useSharedValue,
 } from "react-native-reanimated";
 import { AnimatedThemedView, ThemedViewProps } from "./themed-view";
-import { RefObject } from "react";
+import { ReactNode, RefObject } from "react";
 
 export type ThemedButtonProps = AnimatedProps<ThemedViewProps> & {
   text?: string;
@@ -22,6 +22,7 @@ export type ThemedButtonProps = AnimatedProps<ThemedViewProps> & {
   gestureRef?: RefObject<GestureType | null>;
   externalGestures?: RefObject<GestureType>[];
   onPress?: () => void;
+  children?: ReactNode;
 };
 
 export function ThemedButton({
@@ -34,6 +35,7 @@ export function ThemedButton({
   pressChangesCol = true,
   gestureRef,
   externalGestures = [],
+  children,
   onPress,
   ...rest
 }: ThemedButtonProps) {
@@ -89,6 +91,7 @@ export function ThemedButton({
         <ThemedText colorName="background" type="semiBold" {...textProps}>
           {text}
         </ThemedText>
+        {children}
       </AnimatedThemedView>
     </GestureDetector>
   );

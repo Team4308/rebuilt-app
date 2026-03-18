@@ -41,6 +41,7 @@ export function RootView({
             paddingHorizontal: 28,
             gap: 12,
             borderTopWidth: orientation === "portrait" ? 0.5 : 0,
+            borderWidth: 0,
           },
           style,
         ]}

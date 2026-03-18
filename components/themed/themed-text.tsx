@@ -42,6 +42,8 @@ const styles = StyleSheet.create({
     fontSize: 24,
     lineHeight: 32,
     fontWeight: "600",
+    textAlign: "center",
+    marginTop: 24,
   },
   subtitle: {
     fontSize: 20,

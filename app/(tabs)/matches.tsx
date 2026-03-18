@@ -58,14 +58,7 @@ export default function Matches() {
   const now = Date.now();
   return (
     <RootView>
-      <ThemedText
-        type="title"
-        colorName="highlight"
-        style={{
-          marginTop: 20,
-          alignSelf: "center",
-        }}
-      >
+      <ThemedText type="title" colorName="highlight">
         Select match
       </ThemedText>
 
@@ -113,7 +106,6 @@ export default function Matches() {
 
       <ThemedButton
         colorName="background"
-        pressChangesCol={false}
         text="Unnassigned matches"
         style={{
           width: 230,

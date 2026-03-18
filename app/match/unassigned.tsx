@@ -1,25 +1,16 @@
-import { RootView, ThemedButton } from "@/components";
-import { Colors } from "@/constants/theme";
-import { Feather } from '@expo/vector-icons';
+import {
+  DefaultScrollView,
+  RootView,
+  ThemedButton,
+  ThemedText,
+} from "@/components";
+import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import {
-  LayoutAnimation,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  UIManager,
-  View,
-} from "react-native";
-
+import { StyleSheet } from "react-native";
 import type { MatchSchedule, ScoutingSchedule } from "@/api";
-
-// For android
-if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
+import { AnimatedThemedView } from "@/components/themed/themed-view";
+import { FadeInUp, FadeOutUp, LinearTransition } from "react-native-reanimated";
 
 // --- MOCK DATA ---
 const testScoutingSchedule: ScoutingSchedule = [
@@ -35,53 +26,91 @@ const testScoutingSchedule: ScoutingSchedule = [
   { matchID: "Qualifier 40", teamNumber: 2056, alliance: "red" },
 ];
 
-function groupByMatch(schedule: ScoutingSchedule): Record<string, MatchSchedule[]> {
-  return schedule.reduce((acc, entry) => {
-    if (!acc[entry.matchID]) acc[entry.matchID] = [];
-    acc[entry.matchID].push(entry);
-    return acc;
-  }, {} as Record<string, MatchSchedule[]>);
+function matchNumber(matchID: string): number {
+  const sub = matchID.substring(matchID.indexOf(" ") + 1);
+  const ind = sub.indexOf(" ");
+  if (ind === -1) return parseInt(sub);
+  return parseInt(sub.substring(0, ind)) + 0.5;
 }
 
-function MatchRow({ matchID, teams }: { matchID: string; teams: MatchSchedule[] }) {
+function groupByMatch(
+  schedule: ScoutingSchedule,
+): Record<string, MatchSchedule[]> {
+  schedule.sort((a, b) => {
+    if (a.matchID.startsWith("P") && b.matchID.startsWith("Q")) return -1;
+    if (a.matchID.startsWith("Q") && b.matchID.startsWith("P")) return 1;
+
+    const matchDiff = matchNumber(a.matchID) - matchNumber(b.matchID);
+    if (matchDiff !== 0) return matchDiff;
+
+    if (a.alliance === "red" && b.alliance === "blue") return -1;
+    if (a.alliance === "blue" && b.alliance === "red") return 1;
+
+    return a.teamNumber - b.teamNumber;
+  });
+  return schedule.reduce(
+    (acc, entry) => {
+      if (!acc[entry.matchID]) acc[entry.matchID] = [];
+      acc[entry.matchID].push(entry);
+      return acc;
+    },
+    {} as Record<string, MatchSchedule[]>,
+  );
+}
+
+function MatchRow({
+  matchID,
+  teams,
+}: {
+  matchID: string;
+  teams: MatchSchedule[];
+}) {
   const [expanded, setExpanded] = useState(false);
 
-  const toggle = () => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setExpanded((prev) => !prev);
-  };
-
   return (
-    <View style={styles.matchContainer}>
-      <TouchableOpacity style={styles.matchHeader} onPress={toggle} activeOpacity={0.75}>
-        <Text style={styles.matchTitle}>{matchID}</Text>
+    <AnimatedThemedView
+      borderCol="border"
+      style={styles.matchContainer}
+      layout={LinearTransition}
+    >
+      <ThemedButton
+        colorName="backgroundFaint"
+        style={styles.matchHeader}
+        onPress={() => setExpanded(!expanded)}
+        text={matchID}
+        textProps={{ colorName: "text", type: "semiBold" }}
+      >
         <Feather
           name={expanded ? "chevron-up" : "chevron-down"}
           size={20}
           color="#555"
         />
-      </TouchableOpacity>
+      </ThemedButton>
 
       {expanded && (
-        <View style={styles.teamsRow}>
+        <AnimatedThemedView
+          colorName="backgroundDark"
+          borderCol="border"
+          style={styles.teamsRow}
+          entering={FadeInUp}
+          exiting={FadeOutUp}
+        >
           {teams.map((team) => (
-            <TouchableOpacity
+            <ThemedButton
               key={`${team.matchID}-${team.teamNumber}`}
-              style={[
-                styles.teamButton,
-                team.alliance === "red" ? styles.redTeam : styles.blueTeam,
-              ]}
+              text={team.teamNumber.toString()}
+              textProps={{ colorName: "text", style: styles.teamNumber }}
+              borderCol={team.alliance}
+              colorName={team.alliance === "red" ? "redFill" : "blueFill"}
+              style={styles.teamButton}
               onPress={() => {
                 // ...
               }}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.teamNumber}>{team.teamNumber}</Text>
-            </TouchableOpacity>
+            />
           ))}
-        </View>
+        </AnimatedThemedView>
       )}
-    </View>
+    </AnimatedThemedView>
   );
 }
 
@@ -89,85 +118,51 @@ function MatchRow({ matchID, teams }: { matchID: string; teams: MatchSchedule[] 
 export default function Unassigned() {
   const router = useRouter();
   const grouped = groupByMatch(testScoutingSchedule);
-  const matchIDs = Object.keys(grouped);
 
   return (
-    <RootView style={{ paddingTop: 16 }}>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.screenHeading}>Unassigned Matches</Text>
-        {matchIDs.map((matchID) => (
-          <MatchRow key={matchID} matchID={matchID} teams={grouped[matchID]} />
+    <RootView>
+      <ThemedText colorName="highlight" type="title">
+        Unassigned Matches
+      </ThemedText>
+      <DefaultScrollView>
+        {Object.entries(grouped).map(([matchID, teams]) => (
+          <MatchRow key={matchID} matchID={matchID} teams={teams} />
         ))}
-      </ScrollView>
+      </DefaultScrollView>
       <ThemedButton text="Back" onPress={() => router.back()} />
     </RootView>
   );
 }
 
 const styles = StyleSheet.create({
-  screenHeading: {
-    marginBottom: 16,
-    color: Colors.red,
-    fontWeight: "600",
-    textAlign: "center",
-    fontSize: 24
-  },
-  scrollContent: {
-    paddingTop: 16,
-    gap: 8,
-  },
   matchContainer: {
     borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 4,
+    borderRadius: 8,
     overflow: "hidden",
-    marginBottom: 8,
   },
   matchHeader: {
+    borderRadius: 0,
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 14,
     paddingHorizontal: 16,
-    backgroundColor: Colors.backgroundFaint,
-  },
-  matchTitle: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: Colors.text,
-  },
-  chevron: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: Colors.textFaint,
   },
   teamsRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 10,
     padding: 12,
-    backgroundColor: Colors.backgroundDark,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderWidth: 0,
+    zIndex: -1,
   },
   teamButton: {
-    paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 4,
+    width: "auto",
     minWidth: 80,
-    alignItems: "center",
     borderWidth: 1,
   },
-  redTeam: {
-    backgroundColor: Colors.redFill,
-    borderColor: Colors.red,
-  },
-  blueTeam: {
-    backgroundColor: Colors.blueFill,
-    borderColor: Colors.blue,
-  },
   teamNumber: {
-    color: Colors.tint,
     fontWeight: "700",
     fontSize: 15,
   },
