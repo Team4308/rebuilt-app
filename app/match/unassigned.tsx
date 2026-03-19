@@ -74,7 +74,6 @@ function MatchRow({
       layout={LinearTransition}
     >
       <ThemedButton
-        needScroll
         colorName="backgroundFaint"
         style={styles.matchHeader}
         onPress={() => setExpanded(!expanded)}
@@ -98,7 +97,6 @@ function MatchRow({
         >
           {teams.map((team) => (
             <ThemedButton
-              needScroll
               key={`${team.matchID}-${team.teamNumber}`}
               text={team.teamNumber.toString()}
               textProps={{ colorName: "text", style: styles.teamNumber }}

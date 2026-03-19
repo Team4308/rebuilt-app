@@ -14,22 +14,26 @@ import { useRotateOnEnter } from "@/hooks/rotate-on-enter";
 import { useSettingsStore } from "@/hooks/settings-store";
 import { useRouter } from "expo-router";
 import { OrientationLock } from "expo-screen-orientation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
+import {
+  useAnimatedStyle,
+  useFrameCallback,
+  useSharedValue,
+} from "react-native-reanimated";
 
 export default function Auton() {
   useRotateOnEnter(OrientationLock.LANDSCAPE);
   const router = useRouter();
 
   const state = useMatchStore.getState();
+
   const match = state.current;
   const alliance = match?.alliance;
 
   const [isTracking, setIsTracking] = useState(false);
   const [timer, setTimer] = useState(17);
-  const startTime = useRef(0);
 
   const fieldRef = useRef<View>(null);
   const [fieldLayout, setFieldLayout] = useState({
@@ -42,7 +46,7 @@ export default function Auton() {
     posX: alliance === "blue" ? 210 : -210,
     posY: 0,
   });
-  const routeData = useRef<AutonRoute>([]);
+  const routeData = useSharedValue<AutonRoute>([]);
 
   const [shooting, setShooting] = useState(false);
   const [intaking, setIntaking] = useState(false);
@@ -54,6 +58,8 @@ export default function Auton() {
   const controls = settings.controls;
 
   const updatePos = ({ x, y }: { x: number; y: number }) => {
+    "worklet";
+
     const relativeX = (x / fieldLayout.width) * 2 - 1;
     const relativeY = (y / fieldLayout.height) * 2 - 1;
 
@@ -67,42 +73,61 @@ export default function Auton() {
     .onUpdate(updatePos)
     .simultaneousWithExternalGesture();
 
-  const startTracking = () => {
+  const dataInterval = useRef(0);
+  const countdownInterval = useRef(0);
+  const startTime = useSharedValue(-1);
+  const lastTimestamp = useSharedValue(0);
+  const startTrackingRN = () => {
     setIsTracking(true);
-    startTime.current = Date.now();
 
     state.updateData((curr) => {
       curr.auton.startX = pos.value.posX;
       curr.auton.startY = pos.value.posY;
     });
 
-    const dataInterval = setInterval(() => {
-      routeData.current.push({
+    countdownInterval.current = setInterval(() => {
+      setTimer((prev) => prev - 1);
+    }, 1000);
+  };
+  const startTracking = () => {
+    "worklet";
+
+    const now = performance.now();
+    startTime.value = now;
+    lastTimestamp.value = now;
+  };
+  useFrameCallback(() => {
+    if (startTime.value === -1) return;
+
+    const now = performance.now();
+    const delta = now - lastTimestamp.value;
+    if (now - startTime.value > 17000) {
+      startTime.value = -1;
+      routeData.value = [...routeData.value];
+      return;
+    }
+
+    if (delta >= 100) {
+      lastTimestamp.value += 100;
+      routeData.value.push({
         action: "move",
         ...pos.value,
-        time: Date.now() - startTime.current,
+        time: now - startTime.value,
       });
-    }, 100);
+    }
+  });
 
-    const countdownInterval = setInterval(() => {
-      setTimer((prev) => {
-        if (prev <= 1) {
-          clearInterval(countdownInterval);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    setTimeout(() => {
-      clearInterval(dataInterval);
-      clearInterval(countdownInterval);
+  useEffect(() => {
+    if (timer <= 0) {
+      clearInterval(dataInterval.current);
+      clearInterval(countdownInterval.current);
       state.updateData((curr) => {
-        curr.auton.route = routeData.current;
+        curr.auton.route = routeData.value;
       });
       router.replace("/match/post-match");
-    }, 17000);
-  };
+      return;
+    }
+  }, [timer]);
 
   const actionButtonProps: ThemedButtonProps = {
     active: isTracking,
@@ -112,6 +137,31 @@ export default function Auton() {
       type: "subtitle",
       style: { textAlign: "center", lineHeight: 22 },
     },
+  };
+  const shootRN = () => setShooting((prev) => !prev);
+  const shoot = () => {
+    "worklet";
+    routeData.value.push({
+      action: shooting ? "shoot-stop" : "shoot",
+      time: performance.now() - startTime.value,
+    });
+  };
+  const intakeRN = () => setIntaking((prev) => !prev);
+  const intake = () => {
+    "worklet";
+    routeData.value.push({
+      action: intaking ? "intake-stop" : "intake",
+      time: performance.now() - startTime.value,
+    });
+  };
+  const climbRN = () =>
+    state.updateData((match) => (match.auton.climbAttempted = true));
+  const climb = () => {
+    "worklet";
+    routeData.value.push({
+      action: "climb",
+      time: performance.now() - startTime.value,
+    });
   };
 
   const robotPos = useAnimatedStyle(() => ({
@@ -123,9 +173,19 @@ export default function Auton() {
       BOX_SIZE / 2,
   }));
 
+  if (state.current === null) {
+    router.replace("/(tabs)/matches");
+    return <></>;
+  }
+
   return (
     <RootView style={styles.container} orientation="landscape">
-      <View style={styles.buttonRow}>
+      <View
+        style={[
+          styles.buttonRow,
+          { flexDirection: controls === "left" ? "row-reverse" : "row" },
+        ]}
+      >
         {isTracking ? (
           <ThemedView borderCol="highlight" style={styles.timerOverlay}>
             <ThemedView colorName="highlight" style={styles.recordingDot} />
@@ -142,7 +202,8 @@ export default function Auton() {
             <ThemedButton
               style={styles.navButton}
               text="Start"
-              onPress={startTracking}
+              onPressWorklet={startTracking}
+              onPress={startTrackingRN}
             />
           </>
         )}
@@ -182,38 +243,21 @@ export default function Auton() {
           <ThemedButton
             text={shooting ? "Stop shoot" : "Shoot"}
             {...actionButtonProps}
-            onPress={() => {
-              routeData.current.push({
-                action: shooting ? "shoot-stop" : "shoot",
-                time: Date.now() - startTime.current,
-              });
-              setShooting(!shooting);
-            }}
+            onPressWorklet={shoot}
+            onPress={shootRN}
           />
           <ThemedButton
             text={intaking ? "Stop intake" : "Intake"}
             {...actionButtonProps}
-            onPress={() => {
-              routeData.current.push({
-                action: intaking ? "intake-stop" : "intake",
-                time: Date.now() - startTime.current,
-              });
-              setIntaking(!intaking);
-            }}
+            onPressWorklet={intake}
+            onPress={intakeRN}
           />
           <ThemedButton
             text="Climb"
             {...actionButtonProps}
             active={!climbed && isTracking}
-            onPress={() => {
-              routeData.current.push({
-                action: "climb",
-                time: Date.now() - startTime.current,
-              });
-              state.updateData((match) => {
-                match.auton.climbAttempted = true;
-              });
-            }}
+            onPressWorklet={climb}
+            onPress={climbRN}
           />
         </View>
         <GestureDetector gesture={panGesture}>
@@ -286,7 +330,6 @@ const styles = StyleSheet.create({
     height: 30,
     width: "100%",
     display: "flex",
-    flexDirection: "row",
     justifyContent: "center",
   },
   navButton: {

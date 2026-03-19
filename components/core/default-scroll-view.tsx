@@ -8,6 +8,8 @@ export function DefaultScrollView({
 }: ScrollViewProps) {
   return (
     <ScrollView
+      showsVerticalScrollIndicator={false}
+      showsHorizontalScrollIndicator={false}
       style={[
         {
           flex: 1,

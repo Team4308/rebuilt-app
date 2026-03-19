@@ -10,7 +10,6 @@ import { useSettingsStore } from "@/hooks/settings-store";
 import { useRouter } from "expo-router";
 
 export default function Settings() {
-  const trainingMode = useSettingsStore((state) => state.trainingMode);
   const fieldRotation = useSettingsStore((state) => state.fieldRotation);
   const controls = useSettingsStore((state) => state.controls);
   const actions = useSettingsStore.getState();
@@ -42,15 +41,6 @@ export default function Settings() {
         ]}
         selected={controls}
         setSelected={actions.setControls}
-      />
-      <ThemedSelector
-        label="Training Mode"
-        options={[
-          [true, "On"],
-          [false, "Off"],
-        ]}
-        selected={trainingMode}
-        setSelected={actions.setTrainingMode}
       />
 
       <ThemedButton

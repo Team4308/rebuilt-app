@@ -3,6 +3,7 @@ import { RootView, ThemedButton, ThemedText, ThemedView } from "@/components";
 import { WheelPicker } from "@/components/wheel-picker";
 import { useMatchStore } from "@/hooks/match-store";
 import { useRotateOnEnter } from "@/hooks/rotate-on-enter";
+import { toUpperFirst } from "@/utils/misc";
 import { useRouter } from "expo-router";
 import { OrientationLock } from "expo-screen-orientation";
 
@@ -48,7 +49,7 @@ export default function Matches() {
   );
   const desc = getTimeInfo(selectedMatch);
   const allianceInfo = selectedMatch
-    ? `${selectedMatch.alliance[0].toUpperCase()}${selectedMatch.alliance.substring(1)} alliance`
+    ? `${toUpperFirst(selectedMatch.alliance)} alliance`
     : null;
 
   const state = useMatchStore.getState();
@@ -68,7 +69,9 @@ export default function Matches() {
         renderLabel={(match) => `${match.matchID} - ${match.teamNumber}`}
         renderColor={(match) =>
           match.matchID in state.storedData
-            ? "green"
+            ? match.hasData
+              ? "green"
+              : "yellow"
             : (match.times?.startTime ?? 0) > now
               ? "text"
               : "red"
