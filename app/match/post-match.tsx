@@ -89,6 +89,9 @@ export default function PostMatch() {
   const precisionLevel = useMatchStore(
     (state) => state.current?.auton.precisionLevel,
   );
+  const autonClimbSuccess = useMatchStore(
+    (state) => state.current?.auton.climbSuccess,
+  );
 
   const otherRole = useMatchStore((state) => state.current?.teleop.roles.other);
 
@@ -120,6 +123,7 @@ export default function PostMatch() {
   return (
     <RootView>
       <DefaultScrollView contentContainerStyle={{ paddingBottom: 400 }}>
+        <ThemedText type="subtitle">Auton final</ThemedText>
         <RatingSelector
           label="Rate your auton tracking"
           selected={precisionLevel}
@@ -127,6 +131,28 @@ export default function PostMatch() {
             state.updateData((match) => (match.auton.precisionLevel = val))
           }
         />
+        <CheckBox
+          label="Auton climb succeeded"
+          on={autonClimbSuccess}
+          setOn={(val) =>
+            state.updateData((match) => (match.auton.climbSuccess = val))
+          }
+        />
+        {!autonClimbSuccess ? (
+          <ThemedTextInput
+            label="Auton climb failed reason"
+            textInputProps={{
+              defaultValue: state.current.auton.climbFailReason,
+              onChange: (e) => {
+                state.updateData(
+                  (match) => (match.auton.climbFailReason = e.nativeEvent.text),
+                );
+              },
+            }}
+          />
+        ) : (
+          <></>
+        )}
 
         <ThemedText type="subtitle">Robot roles</ThemedText>
         <ThemedView
@@ -285,7 +311,7 @@ export default function PostMatch() {
               defaultValue: state.current.brokenReason,
               onChange: (e) => {
                 state.updateData(
-                  (match) => (match.comments = e.nativeEvent.text),
+                  (match) => (match.brokenReason = e.nativeEvent.text),
                 );
               },
             }}

@@ -99,6 +99,7 @@ export const useMatchStore = create<MatchStore>()(
               startY: 0,
               route: [],
               climbAttempted: false,
+              climbSuccess: true,
             },
             teleop: {
               roles: {
