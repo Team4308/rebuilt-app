@@ -1,5 +1,5 @@
 import { ThemeColors } from "@/constants/theme";
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import { FlatListProps, StyleSheet, View } from "react-native";
 import { ThemedView } from "./themed/themed-view";
 import { FlatList } from "react-native-gesture-handler";
@@ -7,10 +7,13 @@ import Animated, {
   createAnimatedComponent,
   interpolate,
   SharedValue,
+  useAnimatedReaction,
+  useAnimatedScrollHandler,
   useDerivedValue,
   useSharedValue,
 } from "react-native-reanimated";
 import { AnimatedThemedText } from "./themed/themed-text";
+import { scheduleOnRN } from "react-native-worklets";
 
 const ReanimatedFlatList = createAnimatedComponent(FlatList);
 const AnimatedFlatList = ReanimatedFlatList as unknown as new <
@@ -77,7 +80,20 @@ export function WheelPicker<T>({
   const scrollY = useSharedValue(
     selected === null ? 0 : selected * ITEM_HEIGHT,
   );
-  const selectedRef = useRef(selected);
+  const currentSelected = useSharedValue(selected);
+
+  const scrollHandler = useAnimatedScrollHandler((event) => {
+    scrollY.value = event.contentOffset.y;
+    const index = Math.round(scrollY.value / ITEM_HEIGHT);
+    if (index !== currentSelected.value) currentSelected.value = index;
+  });
+
+  useAnimatedReaction(
+    () => currentSelected.value,
+    (next, prev) => {
+      if (next !== prev) scheduleOnRN(setSelected, next);
+    },
+  );
 
   return (
     <View
@@ -110,14 +126,7 @@ export function WheelPicker<T>({
           contentContainerStyle={{
             paddingVertical: Math.max(0, (containerHeight - ITEM_HEIGHT) / 2),
           }}
-          onScroll={(event) => {
-            scrollY.value = event.nativeEvent.contentOffset.y;
-            const index = Math.round(scrollY.value / ITEM_HEIGHT);
-            if (index !== selectedRef.current) {
-              selectedRef.current = index;
-              setSelected(index);
-            }
-          }}
+          onScroll={scrollHandler}
           getItemLayout={(_, index) => ({
             length: ITEM_HEIGHT,
             offset: ITEM_HEIGHT * index,

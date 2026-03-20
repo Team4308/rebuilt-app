@@ -6,25 +6,22 @@ import {
 } from "@/components";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { StyleSheet } from "react-native";
-import type { MatchSchedule, ScoutingSchedule } from "@/api";
+import {
+  postGetNotScheduled,
+  type MatchSchedule,
+  type ScoutingSchedule,
+} from "@/api";
 import { AnimatedThemedView } from "@/components/themed/themed-view";
 import { FadeInUp, FadeOutUp, LinearTransition } from "react-native-reanimated";
-
-// --- MOCK DATA ---
-const testScoutingSchedule: ScoutingSchedule = [
-  { matchID: "Qualifier 15", teamNumber: 123, alliance: "red" },
-  { matchID: "Qualifier 15", teamNumber: 456, alliance: "blue" },
-  { matchID: "Qualifier 15", teamNumber: 789, alliance: "blue" },
-  { matchID: "Qualifier 36", teamNumber: 254, alliance: "red" },
-  { matchID: "Qualifier 36", teamNumber: 1678, alliance: "blue" },
-  { matchID: "Qualifier 39", teamNumber: 971, alliance: "red" },
-  { matchID: "Qualifier 39", teamNumber: 3310, alliance: "blue" },
-  { matchID: "Qualifier 39", teamNumber: 4414, alliance: "red" },
-  { matchID: "Qualifier 40", teamNumber: 118, alliance: "blue" },
-  { matchID: "Qualifier 40", teamNumber: 2056, alliance: "red" },
-];
+import { useMatchStore } from "@/hooks/match-store";
+import {
+  getToken,
+  UPDATE_INTERVAL,
+  useTokenStore,
+} from "@/hooks/settings-store";
+import { deleteItemAsync } from "expo-secure-store";
 
 function matchNumber(matchID: string): number {
   const sub = matchID.substring(matchID.indexOf(" ") + 1);
@@ -117,7 +114,38 @@ function MatchRow({
 // Main Screen
 export default function Unassigned() {
   const router = useRouter();
-  const grouped = groupByMatch(testScoutingSchedule);
+
+  const state = useMatchStore.getState();
+  const grouped = groupByMatch(useMatchStore((state) => state.unassigned));
+
+  function updateUnassigned() {
+    postGetNotScheduled({ headers: { token: getToken() } }).then((res) => {
+      useMatchStore.setState({ unassignedUpdated: Date.now() });
+      if (res.data !== undefined) state.setUnassigned(res.data);
+      else if (res.response.status === 401) {
+        useTokenStore.getState().setToken("");
+        deleteItemAsync("login-token").then(() => router.replace("/"));
+      }
+    });
+  }
+
+  useEffect(() => {
+    let intervalID = 0;
+
+    const delta = Math.max(
+      state.unassignedUpdated - Date.now() + UPDATE_INTERVAL,
+      100,
+    );
+    const timeoutID = setTimeout(() => {
+      updateUnassigned();
+      intervalID = setInterval(updateUnassigned, UPDATE_INTERVAL);
+    }, delta);
+
+    return () => {
+      clearTimeout(timeoutID);
+      clearInterval(intervalID);
+    };
+  }, []);
 
   return (
     <RootView>
@@ -129,7 +157,10 @@ export default function Unassigned() {
           <MatchRow key={matchID} matchID={matchID} teams={teams} />
         ))}
       </DefaultScrollView>
-      <ThemedButton text="Back" onPress={() => router.back()} />
+      <ThemedButton
+        text="Back"
+        onPress={() => router.replace("/(tabs)/matches")}
+      />
     </RootView>
   );
 }

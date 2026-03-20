@@ -1,4 +1,4 @@
-import { BotRoles, ClimbLevel, TeleopData } from "@/api";
+import { BotRoles, ClimbLevel, postAddMatchData, TeleopData } from "@/api";
 import {
   DefaultScrollView,
   RootView,
@@ -14,10 +14,13 @@ import {
 } from "@/components/themed/themed-selector";
 import { useMatchStore } from "@/hooks/match-store";
 import { useRotateOnEnter } from "@/hooks/rotate-on-enter";
+import { getToken, useTokenStore } from "@/hooks/settings-store";
 import { toUpperFirst } from "@/utils/misc";
 import { useRouter } from "expo-router";
 import { OrientationLock } from "expo-screen-orientation";
+import { deleteItemAsync } from "expo-secure-store";
 import { ReactNode } from "react";
+import { Alert } from "react-native";
 
 type RoleKeys = keyof BotRoles;
 function RoleCheckBox({ role }: { role: RoleKeys }) {
@@ -336,7 +339,44 @@ export default function PostMatch() {
           style={{ marginTop: 30 }}
           text="Submit match data"
           onPress={() => {
-            router.replace("/(tabs)/matches");
+            if (state.current === null) return;
+            state.updateStoredData(state.current);
+            postAddMatchData({
+              headers: { token: getToken() },
+              body: state.current,
+            }).then((res) => {
+              if (state.current === null) return;
+              const status = res.response.status;
+              if (status === 401) {
+                useTokenStore.getState().setToken("");
+                deleteItemAsync("login-token").then(() => router.replace("/"));
+              } else router.replace("/(tabs)/matches");
+            });
+          }}
+        />
+        <ThemedButton
+          colorName="background"
+          text="Discard match"
+          textProps={{ colorName: "highlight" }}
+          style={{
+            width: "auto",
+            paddingHorizontal: 16,
+            height: 30,
+            alignSelf: "center",
+            marginBottom: 10,
+          }}
+          onPress={() => {
+            Alert.alert("Discard match", "Are you sure you want to logout?", [
+              {
+                text: "Cancel",
+                style: "cancel",
+              },
+              {
+                text: "Discard",
+                onPress: () => router.replace("/(tabs)/matches"),
+                style: "destructive",
+              },
+            ]);
           }}
         />
       </DefaultScrollView>

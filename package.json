@@ -8,7 +8,7 @@
     "dev-tunnel": "expo start --tunnel",
     "prod-tunnel": "expo start --no-dev --minify --tunnel",
     "prebuild": "expo prebuild",
-    "api-typegen": "npx openapi-ts -i https://rebuilt-workers.the-woodlands-robotics.workers.dev/openapi.json -o ./api",
+    "openapi": "openapi-ts",
     "android": "expo run:android",
     "ios": "expo run:ios"
   },

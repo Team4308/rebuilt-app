@@ -5,46 +5,13 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
-const mockData: ScoutingSchedule = [
-  {
-    matchID: "Qualifier 15",
-    teamNumber: 4038,
-    alliance: "red",
-    times: { startTime: Date.now() + 300_000 },
-  },
-  {
-    matchID: "Qualifier 16",
-    teamNumber: 4083,
-    alliance: "blue",
-    times: { startTime: Date.now() + 600_000 },
-  },
-  {
-    matchID: "Qualifier 17",
-    teamNumber: 4308,
-    alliance: "blue",
-    times: { startTime: Date.now() + 900_000 },
-  },
-  {
-    matchID: "Qualifier 18",
-    teamNumber: 4380,
-    alliance: "red",
-    times: { startTime: Date.now() + 1_200_000 },
-  },
-  {
-    matchID: "Qualifier 19",
-    teamNumber: 4803,
-    alliance: "blue",
-    times: { startTime: Date.now() + 1_500_000 },
-  },
-  {
-    matchID: "Qualifier 20",
-    teamNumber: 4830,
-    alliance: "red",
-    times: { startTime: Date.now() + 1_800_000 },
-  },
-];
-
 type MatchStore = {
+  nowQueuing: string;
+  setNowQueuing: (val: string) => void;
+
+  lastUpdated: number;
+  setLastUpdated: (val: number) => void;
+
   schedule: ScoutingSchedule;
   setSchedule: (sch: ScoutingSchedule) => void;
   selected: number | null;
@@ -54,14 +21,24 @@ type MatchStore = {
   newData: () => void;
   updateData: (func: (curr: WritableDraft<MatchData>) => void) => void;
 
-  storedData: { [key: string]: MatchData };
+  unassigned: ScoutingSchedule;
+  setUnassigned: (sch: ScoutingSchedule) => void;
+  unassignedUpdated: number;
+
+  storedData: Record<string, MatchData>;
   updateStoredData: (data: MatchData) => void;
 };
 
 export const useMatchStore = create<MatchStore>()(
   persist(
     immer((set, get) => ({
-      schedule: mockData,
+      nowQueuing: "number",
+      setNowQueuing: (val) => set({ nowQueuing: val }),
+
+      lastUpdated: 0,
+      setLastUpdated: (val) => set({ lastUpdated: val }),
+
+      schedule: [],
       setSchedule: (sch) =>
         set((state) => {
           state.schedule = sch;
@@ -74,13 +51,17 @@ export const useMatchStore = create<MatchStore>()(
             );
         }),
       selected: null,
-      setSelected: (sel) =>
-        set({
-          selected:
-            sel !== null
-              ? Math.min(get().schedule.length - 1, Math.max(0, sel))
-              : null,
-        }),
+      setSelected: (sel) => {
+        if (get().schedule.length === 0) set({ selected: null });
+        else {
+          set({
+            selected:
+              sel !== null
+                ? Math.min(get().schedule.length - 1, Math.max(0, sel))
+                : null,
+          });
+        }
+      },
 
       current: null,
       newData: () => {
@@ -130,16 +111,23 @@ export const useMatchStore = create<MatchStore>()(
           func(state.current);
         }),
 
+      unassigned: [],
+      setUnassigned: (sch) => set({ unassigned: sch }),
+      unassignedUpdated: 0,
+
       storedData: {},
       updateStoredData: (data) => {
         const state = get();
-        state.storedData[data.matchID] = data;
+        state.storedData = {
+          ...state.storedData,
+          [data.matchID]: data,
+        };
       },
     })),
     {
       name: "match-store",
       storage: createJSONStorage(() => AsyncStorage),
-      partialize: (state) => state.storedData,
+      partialize: (state) => ({ storedData: state.storedData }),
     },
   ),
 );

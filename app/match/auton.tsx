@@ -22,6 +22,7 @@ import {
   useFrameCallback,
   useSharedValue,
 } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 
 export default function Auton() {
   useRotateOnEnter(OrientationLock.LANDSCAPE);
@@ -77,12 +78,12 @@ export default function Auton() {
   const countdownInterval = useRef(0);
   const startTime = useSharedValue(-1);
   const lastTimestamp = useSharedValue(0);
-  const startTrackingRN = () => {
+  const startTrackingRN = ({ posX, posY }: { posX: number; posY: number }) => {
     setIsTracking(true);
 
     state.updateData((curr) => {
-      curr.auton.startX = pos.value.posX;
-      curr.auton.startY = pos.value.posY;
+      curr.auton.startX = posX;
+      curr.auton.startY = posY;
     });
 
     countdownInterval.current = setInterval(() => {
@@ -95,6 +96,8 @@ export default function Auton() {
     const now = performance.now();
     startTime.value = now;
     lastTimestamp.value = now;
+
+    scheduleOnRN(startTrackingRN, pos.value);
   };
   useFrameCallback(() => {
     if (startTime.value === -1) return;
@@ -203,7 +206,6 @@ export default function Auton() {
               style={styles.navButton}
               text="Start"
               onPressWorklet={startTracking}
-              onPress={startTrackingRN}
             />
           </>
         )}
