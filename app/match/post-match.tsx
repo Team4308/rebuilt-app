@@ -14,11 +14,10 @@ import {
 } from "@/components/themed/themed-selector";
 import { useMatchStore } from "@/hooks/match-store";
 import { useRotateOnEnter } from "@/hooks/rotate-on-enter";
-import { getToken, useTokenStore } from "@/hooks/settings-store";
+import { getToken, logout } from "@/hooks/settings-store";
 import { toUpperFirst } from "@/utils/misc";
 import { useRouter } from "expo-router";
 import { OrientationLock } from "expo-screen-orientation";
-import { deleteItemAsync } from "expo-secure-store";
 import { ReactNode } from "react";
 import { Alert } from "react-native";
 
@@ -88,6 +87,7 @@ export default function PostMatch() {
   const router = useRouter();
 
   const state = useMatchStore.getState();
+  const match = state.current;
 
   const precisionLevel = useMatchStore(
     (state) => state.current?.auton.precisionLevel,
@@ -123,31 +123,33 @@ export default function PostMatch() {
     return <></>;
   }
 
+  const updateData = state.updateData;
+
   return (
     <RootView>
       <DefaultScrollView contentContainerStyle={{ paddingBottom: 400 }}>
-        <ThemedText type="subtitle">Auton final</ThemedText>
+        <ThemedText type="subtitle">Final auton stuff</ThemedText>
         <RatingSelector
           label="Rate your auton tracking"
           selected={precisionLevel}
           setSelected={(val) =>
-            state.updateData((match) => (match.auton.precisionLevel = val))
+            updateData((match) => (match.auton.precisionLevel = val))
           }
         />
         <CheckBox
           label="Auton climb succeeded"
           on={autonClimbSuccess}
           setOn={(val) =>
-            state.updateData((match) => (match.auton.climbSuccess = val))
+            updateData((match) => (match.auton.climbSuccess = val))
           }
         />
         {!autonClimbSuccess ? (
           <ThemedTextInput
             label="Auton climb failed reason"
             textInputProps={{
-              defaultValue: state.current.auton.climbFailReason,
+              defaultValue: match?.auton.climbFailReason,
               onChange: (e) => {
-                state.updateData(
+                updateData(
                   (match) => (match.auton.climbFailReason = e.nativeEvent.text),
                 );
               },
@@ -174,9 +176,9 @@ export default function PostMatch() {
           <ThemedTextInput
             label="Other role"
             textInputProps={{
-              defaultValue: state.current.teleop.rolesOther,
+              defaultValue: match?.teleop.rolesOther,
               onChange: (e) => {
-                state.updateData(
+                updateData(
                   (match) => (match.teleop.rolesOther = e.nativeEvent.text),
                 );
               },
@@ -190,13 +192,13 @@ export default function PostMatch() {
         <CheckBox
           label="Can trench"
           on={canTrench}
-          setOn={(val) => state.updateData((match) => (match.canTrench = val))}
+          setOn={(val) => updateData((match) => (match.canTrench = val))}
         />
         <CheckBox
           label="Can shoot while moving"
           on={shootsWhileMoving}
           setOn={(val) =>
-            state.updateData((match) => (match.teleop.shootsWhileMoving = val))
+            updateData((match) => (match.teleop.shootsWhileMoving = val))
           }
         />
         <Rating label="Movement Speed" ratingKey="movementSpeed" />
@@ -221,7 +223,7 @@ export default function PostMatch() {
           label="Attempted climb"
           on={climbAttempted}
           setOn={(val) =>
-            state.updateData((match) => (match.teleop.climbAttempted = val))
+            updateData((match) => (match.teleop.climbAttempted = val))
           }
         />
 
@@ -237,9 +239,9 @@ export default function PostMatch() {
               <ThemedTextInput
                 label="Climb failed reason"
                 textInputProps={{
-                  defaultValue: state.current.teleop.climbFailReason,
+                  defaultValue: match?.teleop.climbFailReason,
                   onChange: (e) => {
-                    state.updateData(
+                    updateData(
                       (match) =>
                         (match.teleop.climbFailReason = e.nativeEvent.text),
                     );
@@ -259,11 +261,12 @@ export default function PostMatch() {
           label="Penalty points"
           textInputProps={{
             keyboardType: "number-pad",
-            defaultValue: state.current.penaltyPoints.toString(),
+            defaultValue:
+              match?.penaltyPoints === 0 ? "" : match?.penaltyPoints.toString(),
             onChange: (e) => {
               const text = e.nativeEvent.text;
               const set = text.length > 0 ? parseInt(text) : 0;
-              state.updateData((match) => (match.penaltyPoints = set));
+              updateData((match) => (match.penaltyPoints = set));
             },
           }}
         />
@@ -276,7 +279,7 @@ export default function PostMatch() {
           selected={penaltyCard}
           defaultVal="none"
           setSelected={(val) =>
-            state.updateData((match) => (match.penaltyCard = val))
+            updateData((match) => (match.penaltyCard = val))
           }
         />
 
@@ -284,7 +287,7 @@ export default function PostMatch() {
         <CheckBox
           label="Bot got beached"
           on={beached}
-          setOn={(val) => state.updateData((match) => (match.beached = val))}
+          setOn={(val) => updateData((match) => (match.beached = val))}
         />
         {beached ? (
           <ThemedSelector<"on-fuel" | "on-bump">
@@ -296,7 +299,7 @@ export default function PostMatch() {
             selected={beachedReason}
             defaultVal={"on-fuel"}
             setSelected={(val) =>
-              state.updateData((match) => (match.beachedReason = val))
+              updateData((match) => (match.beachedReason = val))
             }
           />
         ) : (
@@ -305,15 +308,15 @@ export default function PostMatch() {
         <CheckBox
           label="Bot broke"
           on={botBroke}
-          setOn={(val) => state.updateData((match) => (match.botBroke = val))}
+          setOn={(val) => updateData((match) => (match.botBroke = val))}
         />
         {botBroke ? (
           <ThemedTextInput
             label="Reason bot broke"
             textInputProps={{
-              defaultValue: state.current.brokenReason,
+              defaultValue: match?.brokenReason,
               onChange: (e) => {
-                state.updateData(
+                updateData(
                   (match) => (match.brokenReason = e.nativeEvent.text),
                 );
               },
@@ -326,11 +329,9 @@ export default function PostMatch() {
         <ThemedText type="subtitle">Comments</ThemedText>
         <ThemedTextInput
           textInputProps={{
-            defaultValue: state.current.comments,
+            defaultValue: match?.comments,
             onChange: (e) => {
-              state.updateData(
-                (match) => (match.comments = e.nativeEvent.text),
-              );
+              updateData((match) => (match.comments = e.nativeEvent.text));
             },
           }}
         />
@@ -339,18 +340,17 @@ export default function PostMatch() {
           style={{ marginTop: 30 }}
           text="Submit match data"
           onPress={() => {
-            if (state.current === null) return;
-            state.updateStoredData(state.current);
+            if (match === null) return;
             postAddMatchData({
               headers: { token: getToken() },
-              body: state.current,
+              body: match,
             }).then((res) => {
-              if (state.current === null) return;
-              const status = res.response.status;
-              if (status === 401) {
-                useTokenStore.getState().setToken("");
-                deleteItemAsync("login-token").then(() => router.replace("/"));
-              } else router.replace("/(tabs)/matches");
+              if (match === null) return;
+              if (res.response.status === 401) logout(router);
+              else {
+                state.updateStoredData(match);
+                router.replace("/(tabs)/matches");
+              }
             });
           }}
         />
@@ -366,17 +366,21 @@ export default function PostMatch() {
             marginBottom: 10,
           }}
           onPress={() => {
-            Alert.alert("Discard match", "Are you sure you want to logout?", [
-              {
-                text: "Cancel",
-                style: "cancel",
-              },
-              {
-                text: "Discard",
-                onPress: () => router.replace("/(tabs)/matches"),
-                style: "destructive",
-              },
-            ]);
+            Alert.alert(
+              "Discard match",
+              "Are you sure you want to discard match data?",
+              [
+                {
+                  text: "Cancel",
+                  style: "cancel",
+                },
+                {
+                  text: "Discard",
+                  onPress: () => router.replace("/(tabs)/matches"),
+                  style: "destructive",
+                },
+              ],
+            );
           }}
         />
       </DefaultScrollView>

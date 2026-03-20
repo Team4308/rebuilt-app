@@ -3,15 +3,10 @@ import { RootView, ThemedButton, ThemedText, ThemedView } from "@/components";
 import { WheelPicker } from "@/components/wheel-picker";
 import { useMatchStore } from "@/hooks/match-store";
 import { useRotateOnEnter } from "@/hooks/rotate-on-enter";
-import {
-  getToken,
-  UPDATE_INTERVAL,
-  useTokenStore,
-} from "@/hooks/settings-store";
+import { getToken, logout, UPDATE_INTERVAL } from "@/hooks/settings-store";
 import { toUpperFirst } from "@/utils/misc";
 import { useRouter } from "expo-router";
 import { OrientationLock } from "expo-screen-orientation";
-import { deleteItemAsync } from "expo-secure-store";
 import { useEffect, useState } from "react";
 
 function msToWords(time: number): string {
@@ -73,10 +68,8 @@ export default function Matches() {
       if (res.data !== undefined) {
         setConnection(2);
         state.setSchedule(res.data);
-      } else if (res.response.status === 401) {
-        useTokenStore.getState().setToken("");
-        deleteItemAsync("login-token").then(() => router.replace("/"));
-      } else setConnection((prev) => Math.max(0, prev - 1));
+      } else if (res.response.status === 401) logout(router);
+      else setConnection((prev) => Math.max(0, prev - 1));
     });
   }
 

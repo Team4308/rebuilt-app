@@ -7,9 +7,9 @@ import {
 } from "@/components";
 import { arenaH, arenaW } from "@/components/themed/arena-svg";
 import { useMatchStore } from "@/hooks/match-store";
-import { useSettingsStore, useTokenStore } from "@/hooks/settings-store";
+import { usePitsStore } from "@/hooks/pits-store";
+import { logout, useSettingsStore } from "@/hooks/settings-store";
 import { useRouter } from "expo-router";
-import { deleteItemAsync } from "expo-secure-store";
 import { Alert } from "react-native";
 
 export default function Settings() {
@@ -20,7 +20,7 @@ export default function Settings() {
   const router = useRouter();
   return (
     <RootView style={{ paddingTop: 16 }}>
-      <ThemedText type="subtitle">Field Rotation</ThemedText>
+      <ThemedText type="subtitle">Field rotation</ThemedText>
       <ArenaSVG
         style={{
           width: "100%",
@@ -57,10 +57,7 @@ export default function Settings() {
             },
             {
               text: "Logout",
-              onPress: () => {
-                useTokenStore.getState().setToken("");
-                deleteItemAsync("login-token").then(() => router.replace("/"));
-              },
+              onPress: () => logout(router),
               style: "destructive",
             },
           ]);
@@ -80,7 +77,7 @@ export default function Settings() {
         onPress={() => {
           Alert.alert(
             "Discard all data",
-            "Are you sure you want discard all match data?",
+            "Are you sure you want discard all data?",
             [
               {
                 text: "Cancel",
@@ -88,7 +85,10 @@ export default function Settings() {
               },
               {
                 text: "Discard",
-                onPress: () => useMatchStore.setState({ storedData: {} }),
+                onPress: () => {
+                  useMatchStore.getState().resetStoredData();
+                  usePitsStore.getState().resetStoredData();
+                },
                 style: "destructive",
               },
             ],

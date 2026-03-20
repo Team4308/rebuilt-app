@@ -1,6 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Router } from "expo-router";
+import { deleteItemAsync } from "expo-secure-store";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { useMatchStore } from "./match-store";
+import { usePitsStore } from "./pits-store";
 
 export const UPDATE_INTERVAL = 10_000;
 
@@ -37,4 +41,11 @@ export const useTokenStore = create<TokenStore>()((set) => ({
 
 export function getToken(): string {
   return useTokenStore.getState().token;
+}
+
+export function logout(router: Router) {
+  useTokenStore.getState().setToken("");
+  useMatchStore.getState().resetStoredData();
+  usePitsStore.getState().resetStoredData();
+  deleteItemAsync("login-token").then(() => router.replace("/"));
 }

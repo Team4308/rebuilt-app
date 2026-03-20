@@ -6,9 +6,6 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
 type MatchStore = {
-  nowQueuing: string;
-  setNowQueuing: (val: string) => void;
-
   lastUpdated: number;
   setLastUpdated: (val: number) => void;
 
@@ -24,17 +21,16 @@ type MatchStore = {
   unassigned: ScoutingSchedule;
   setUnassigned: (sch: ScoutingSchedule) => void;
   unassignedUpdated: number;
+  setUnassignedUpdated: (val: number) => void;
 
   storedData: Record<string, MatchData>;
+  resetStoredData: () => void;
   updateStoredData: (data: MatchData) => void;
 };
 
 export const useMatchStore = create<MatchStore>()(
   persist(
     immer((set, get) => ({
-      nowQueuing: "number",
-      setNowQueuing: (val) => set({ nowQueuing: val }),
-
       lastUpdated: 0,
       setLastUpdated: (val) => set({ lastUpdated: val }),
 
@@ -114,8 +110,10 @@ export const useMatchStore = create<MatchStore>()(
       unassigned: [],
       setUnassigned: (sch) => set({ unassigned: sch }),
       unassignedUpdated: 0,
+      setUnassignedUpdated: (val) => set({ unassignedUpdated: val }),
 
       storedData: {},
+      resetStoredData: () => set({ storedData: {} }),
       updateStoredData: (data) => {
         const state = get();
         state.storedData = {

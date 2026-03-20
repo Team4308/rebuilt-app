@@ -16,12 +16,7 @@ import {
 import { AnimatedThemedView } from "@/components/themed/themed-view";
 import { FadeInUp, FadeOutUp, LinearTransition } from "react-native-reanimated";
 import { useMatchStore } from "@/hooks/match-store";
-import {
-  getToken,
-  UPDATE_INTERVAL,
-  useTokenStore,
-} from "@/hooks/settings-store";
-import { deleteItemAsync } from "expo-secure-store";
+import { getToken, logout, UPDATE_INTERVAL } from "@/hooks/settings-store";
 
 function matchNumber(matchID: string): number {
   const sub = matchID.substring(matchID.indexOf(" ") + 1);
@@ -120,12 +115,9 @@ export default function Unassigned() {
 
   function updateUnassigned() {
     postGetNotScheduled({ headers: { token: getToken() } }).then((res) => {
-      useMatchStore.setState({ unassignedUpdated: Date.now() });
+      state.setUnassignedUpdated(Date.now());
       if (res.data !== undefined) state.setUnassigned(res.data);
-      else if (res.response.status === 401) {
-        useTokenStore.getState().setToken("");
-        deleteItemAsync("login-token").then(() => router.replace("/"));
-      }
+      else if (res.response.status === 401) logout(router);
     });
   }
 
