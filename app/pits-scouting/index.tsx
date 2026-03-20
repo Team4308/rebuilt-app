@@ -6,10 +6,11 @@ import {
   ThemedText,
   ThemedTextInput,
 } from "@/components";
-import { CheckBox } from "@/components/themed/themed-selector";
+import { CheckBox, ThemedSelector } from "@/components/themed/themed-selector";
 import { usePitsStore } from "@/hooks/pits-store";
 import { getToken, logout } from "@/hooks/settings-store";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import { Alert } from "react-native";
 
 export default function Pits() {
@@ -18,7 +19,13 @@ export default function Pits() {
   const state = usePitsStore.getState();
   const pitsData = state.current;
   const trench = usePitsStore((state) => state.current?.trench);
+  const canFeed = usePitsStore((state) => state.current?.canFeed);
+  const shooter = usePitsStore((state) => state.current?.shooter);
+  const climbLevel = usePitsStore((state) => state.current?.climbLevel);
   const updateData = state.updateData;
+
+  const [fixed, setFixed] = useState<"single" | "double" | "multi">("single");
+  const [turret, setTurret] = useState<"single" | "double">("single");
 
   if (pitsData === null) {
     router.replace("/(tabs)/pits");
@@ -30,32 +37,121 @@ export default function Pits() {
       <DefaultScrollView contentContainerStyle={{ paddingBottom: 400 }}>
         <ThemedText type="subtitle">Team {pitsData.team}</ThemedText>
 
+        <ThemedTextInput
+          label="Description of auton route"
+          textInputProps={{
+            defaultValue: pitsData.autonDesc,
+            onChange: (e) => {
+              state.updateData((data) => (data.autonDesc = e.nativeEvent.text));
+            },
+          }}
+        />
+
         <CheckBox
           label="Can trench"
           on={trench}
           setOn={(val) => updateData((data) => (data.trench = val))}
         />
 
-        <ThemedTextInput
-          label="Description of auton route"
-          textInputProps={{
-            defaultValue: pitsData.autoDesc,
-            onChange: (e) => {
-              state.updateData((data) => (data.autoDesc = e.nativeEvent.text));
-            },
-          }}
+        <CheckBox
+          label="Can feed/pass"
+          on={canFeed}
+          setOn={(val) => updateData((data) => (data.canFeed = val))}
         />
 
-        <ThemedTextInput
-          label="Shooter Type"
-          textInputProps={{
-            defaultValue: pitsData.shooterType,
-            onChange: (e) => {
-              state.updateData(
-                (data) => (data.shooterType = e.nativeEvent.text),
-              );
-            },
-          }}
+        <ThemedSelector<"fixed" | "turret" | "drum">
+          label="Shooter type"
+          options={[
+            ["fixed", "Fixed"],
+            ["turret", "Turret"],
+            ["drum", "Drum"],
+          ]}
+          selected={shooter}
+          setSelected={(val) =>
+            usePitsStore.setState((state) => {
+              const data = state.current;
+              if (data === null) return;
+              if (val === "fixed") {
+                state.current = {
+                  ...data,
+                  shooter: "fixed",
+                  shooterQuant: fixed,
+                };
+              } else if (val === "turret") {
+                state.current = {
+                  ...data,
+                  shooter: "turret",
+                  shooterQuant: turret,
+                };
+              } else {
+                const {
+                  team,
+                  autonDesc,
+                  trench,
+                  canFeed,
+                  climbLevel,
+                  hopperCapacity,
+                  weight,
+                  comments,
+                } = data;
+                state.current = {
+                  team,
+                  autonDesc,
+                  trench,
+                  canFeed,
+                  climbLevel,
+                  hopperCapacity,
+                  weight,
+                  comments,
+                  shooter: "drum",
+                };
+              }
+            })
+          }
+        />
+
+        {shooter === "fixed" ? (
+          <ThemedSelector<"single" | "double" | "multi">
+            options={[
+              ["single", "Single"],
+              ["double", "Double"],
+              ["multi", "Triple+"],
+            ]}
+            selected={fixed}
+            setSelected={(val) =>
+              updateData((data) => {
+                if (data.shooter === "fixed") {
+                  data.shooterQuant = val;
+                  setFixed(val);
+                }
+              })
+            }
+          />
+        ) : shooter === "turret" ? (
+          <ThemedSelector<"single" | "double">
+            options={[
+              ["single", "Single"],
+              ["double", "Double"],
+            ]}
+            selected={turret}
+            setSelected={(val) =>
+              updateData((data) => {
+                if (data.shooter === "turret") {
+                  data.shooterQuant = val;
+                  setTurret(val);
+                }
+              })
+            }
+          />
+        ) : (
+          <></>
+        )}
+
+        <ThemedSelector<"L1" | "L2" | "L3" | "N/A">
+          label="Climb level"
+          options={[["L1"], ["L2"], ["L3"], ["N/A"]]}
+          selected={climbLevel}
+          setSelected={(val) => updateData((data) => (data.climbLevel = val))}
         />
 
         <ThemedTextInput
@@ -130,7 +226,7 @@ export default function Pits() {
           onPress={() => {
             Alert.alert(
               "Discard pits data",
-              "Are you sure you want to discard pits data?",
+              "Are you sure you want to discard without saving?",
               [
                 {
                   text: "Cancel",

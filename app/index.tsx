@@ -70,6 +70,7 @@ export default function Index() {
         label="Student number"
         textInputProps={{
           keyboardType: "number-pad",
+          placeholder: "777777",
           onChange: (e) => {
             const text = e.nativeEvent.text;
             if (text.length === 0) studentNumber.current = null;
@@ -80,6 +81,7 @@ export default function Index() {
       <ThemedTextInput
         label="Name"
         textInputProps={{
+          placeholder: "John Doe",
           onChange: (e) => {
             name.current = e.nativeEvent.text;
           },

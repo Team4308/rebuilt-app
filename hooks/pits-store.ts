@@ -66,11 +66,14 @@ export const usePitsStore = create<PitsStore>()(
               ? storedData[team]
               : {
                   team,
-                  autoDesc: "",
+                  autonDesc: "",
                   trench: false,
+                  canFeed: false,
+                  shooter: "fixed",
+                  shooterQuant: "single",
+                  climbLevel: "L1",
                   hopperCapacity: 0,
                   weight: 0,
-                  shooterType: "",
                   comments: "",
                 },
         });
