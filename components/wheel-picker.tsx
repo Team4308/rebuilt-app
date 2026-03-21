@@ -1,6 +1,6 @@
 import { ThemeColors } from "@/constants/theme";
 import React, { useState } from "react";
-import { FlatListProps, StyleSheet, View } from "react-native";
+import { FlatListProps, PixelRatio, StyleSheet, View } from "react-native";
 import { ThemedView } from "./themed/themed-view";
 import { FlatList } from "react-native-gesture-handler";
 import Animated, {
@@ -20,7 +20,7 @@ const AnimatedFlatList = ReanimatedFlatList as unknown as new <
   T,
 >() => React.Component<FlatListProps<T>>;
 
-const ITEM_HEIGHT = 60;
+const ITEM_HEIGHT = PixelRatio.roundToNearestPixel(60);
 
 function AnimatedItem({
   label,
@@ -146,6 +146,7 @@ const styles = StyleSheet.create({
   },
   listItem: {
     height: ITEM_HEIGHT,
+    maxHeight: ITEM_HEIGHT,
     alignItems: "center",
     justifyContent: "center",
   },

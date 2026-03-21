@@ -6,7 +6,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { useMatchStore } from "./match-store";
 import { usePitsStore } from "./pits-store";
 
-export const UPDATE_INTERVAL = 10_000;
+export const UPDATE_INTERVAL = 15_000;
 
 type SettingsStore = {
   fieldRotation: "rb" | "br";

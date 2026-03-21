@@ -16,7 +16,12 @@ export function ThemedText({
   if (!colorName) colorName = type === "small" ? "textFaint" : "text";
   return (
     <Text
-      style={[{ color: Colors[colorName] }, styles[type], style]}
+      style={[
+        { color: Colors[colorName] },
+        { fontFamily: "Inter" },
+        styles[type],
+        style,
+      ]}
       {...rest}
     />
   );

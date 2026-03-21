@@ -49,6 +49,10 @@ export function ThemedTextInput({
                 fontSize: 16,
                 color: Colors.text,
                 paddingHorizontal: 12,
+                fontFamily: "Inter",
+                paddingVertical: 0,
+                textAlignVertical: "center",
+                includeFontPadding: false,
               },
               textInputProps?.style,
             ]}
