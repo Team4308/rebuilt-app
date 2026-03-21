@@ -38,6 +38,11 @@ export const useMatchStore = create<MatchStore>()(
       setSchedule: (sch) =>
         set((state) => {
           state.schedule = sch;
+          sch.sort((a, b) => {
+            const idA = parseInt(a.matchID.split(" ")[1]);
+            const idB = parseInt(b.matchID.split(" ")[1]);
+            return idA - idB;
+          });
           if (sch.length === 0) state.selected = null;
           else if (state.selected === null) state.selected = 0;
           else if (state.selected !== null)
